@@ -1,0 +1,789 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* HemApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* HemApp.swift */; };
+		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* ContentView.swift */; };
+		A10000000000000000000003 /* ExportDateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* ExportDateFormatting.swift */; };
+		A10000000000000000000004 /* ExportPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* ExportPayload.swift */; };
+		A10000000000000000000005 /* WeekRange.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* WeekRange.swift */; };
+		A10000000000000000000006 /* ExportErrorPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* ExportErrorPresentation.swift */; };
+		A10000000000000000000007 /* HealthAuthorizationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* HealthAuthorizationService.swift */; };
+		A10000000000000000000008 /* HealthExportRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* HealthExportRunner.swift */; };
+		A10000000000000000000009 /* HealthExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* HealthExportService.swift */; };
+		A1000000000000000000000A /* HealthMetricDefinitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* HealthMetricDefinitions.swift */; };
+		A1000000000000000000000B /* HemWebClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000B /* HemWebClient.swift */; };
+		A1000000000000000000000C /* HemWebConfigurationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000C /* HemWebConfigurationStore.swift */; };
+		A1000000000000000000000D /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000D /* KeychainStore.swift */; };
+		A1000000000000000000000E /* AppShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000E /* AppShortcuts.swift */; };
+		A1000000000000000000000F /* ExportHealthToHemWebIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* ExportHealthToHemWebIntent.swift */; };
+		A10000000000000000000010 /* WeekRangeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* WeekRangeTests.swift */; };
+		A10000000000000000000011 /* ExportPayloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* ExportPayloadTests.swift */; };
+		A10000000000000000000012 /* HemWebClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000012 /* HemWebClientTests.swift */; };
+		A10000000000000000000013 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000013 /* HealthKit.framework */; };
+		A10000000000000000000014 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000014 /* Security.framework */; };
+		A10000000000000000000016 /* DashboardPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001A /* DashboardPanel.swift */; };
+		A10000000000000000000017 /* DateRangePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001B /* DateRangePicker.swift */; };
+		A10000000000000000000018 /* DestinationPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001C /* DestinationPanel.swift */; };
+		A10000000000000000000019 /* ExportPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001D /* ExportPanel.swift */; };
+		A1000000000000000000001A /* FieldRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001E /* FieldRow.swift */; };
+		A1000000000000000000001B /* HeaderPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001F /* HeaderPanel.swift */; };
+		A1000000000000000000001C /* HealthPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000020 /* HealthPanel.swift */; };
+		A1000000000000000000001D /* InfoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000021 /* InfoRow.swift */; };
+		A1000000000000000000001E /* MetricGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000022 /* MetricGrid.swift */; };
+		A1000000000000000000001F /* ReadinessPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000023 /* ReadinessPanel.swift */; };
+		A10000000000000000000020 /* ReadinessPill.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000024 /* ReadinessPill.swift */; };
+		A10000000000000000000021 /* ResultBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000025 /* ResultBanner.swift */; };
+		A10000000000000000000022 /* ResultPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000026 /* ResultPanel.swift */; };
+		A10000000000000000000023 /* ScreenContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000027 /* ScreenContainer.swift */; };
+		A10000000000000000000025 /* ExportScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000029 /* ExportScreen.swift */; };
+		A10000000000000000000026 /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002A /* SettingsScreen.swift */; };
+		A10000000000000000000027 /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002B /* AppTab.swift */; };
+		A10000000000000000000028 /* ExportDisplayResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002C /* ExportDisplayResult.swift */; };
+		A10000000000000000000029 /* MetricItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002D /* MetricItem.swift */; };
+		A1000000000000000000002A /* ReadinessState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002E /* ReadinessState.swift */; };
+		A1000000000000000000002B /* HemWebEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002F /* HemWebEndpoint.swift */; };
+		A1000000000000000000002C /* ExportSourceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000030 /* ExportSourceProvider.swift */; };
+		A1000000000000000000002D /* LoadingActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000031 /* LoadingActionButton.swift */; };
+		A1000000000000000000002E /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000032 /* TestSupport.swift */; };
+		A1000000000000000000002F /* HealthMetricDefinitionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* HealthMetricDefinitionsTests.swift */; };
+		A10000000000000000000030 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000034 /* AppIcon.icon */; };
+		A10000000000000000000031 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000035 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A30000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A40000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A50000000000000000000001;
+			remoteInfo = Hem;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		A20000000000000000000001 /* HemApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HemApp.swift; sourceTree = "<group>"; };
+		A20000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A20000000000000000000003 /* ExportDateFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportDateFormatting.swift; sourceTree = "<group>"; };
+		A20000000000000000000004 /* ExportPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportPayload.swift; sourceTree = "<group>"; };
+		A20000000000000000000005 /* WeekRange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekRange.swift; sourceTree = "<group>"; };
+		A20000000000000000000006 /* ExportErrorPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportErrorPresentation.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* HealthAuthorizationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthAuthorizationService.swift; sourceTree = "<group>"; };
+		A20000000000000000000008 /* HealthExportRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthExportRunner.swift; sourceTree = "<group>"; };
+		A20000000000000000000009 /* HealthExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthExportService.swift; sourceTree = "<group>"; };
+		A2000000000000000000000A /* HealthMetricDefinitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthMetricDefinitions.swift; sourceTree = "<group>"; };
+		A2000000000000000000000B /* HemWebClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HemWebClient.swift; sourceTree = "<group>"; };
+		A2000000000000000000000C /* HemWebConfigurationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HemWebConfigurationStore.swift; sourceTree = "<group>"; };
+		A2000000000000000000000D /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		A2000000000000000000000E /* AppShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShortcuts.swift; sourceTree = "<group>"; };
+		A2000000000000000000000F /* ExportHealthToHemWebIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportHealthToHemWebIntent.swift; sourceTree = "<group>"; };
+		A20000000000000000000010 /* WeekRangeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekRangeTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000011 /* ExportPayloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportPayloadTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000012 /* HemWebClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HemWebClientTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000013 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
+		A20000000000000000000014 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		A20000000000000000000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A20000000000000000000016 /* Hem.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Hem.entitlements; sourceTree = "<group>"; };
+		A20000000000000000000017 /* Hem.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Hem.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000018 /* HemTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HemTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A2000000000000000000001A /* DashboardPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardPanel.swift; sourceTree = "<group>"; };
+		A2000000000000000000001B /* DateRangePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateRangePicker.swift; sourceTree = "<group>"; };
+		A2000000000000000000001C /* DestinationPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationPanel.swift; sourceTree = "<group>"; };
+		A2000000000000000000001D /* ExportPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportPanel.swift; sourceTree = "<group>"; };
+		A2000000000000000000001E /* FieldRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldRow.swift; sourceTree = "<group>"; };
+		A2000000000000000000001F /* HeaderPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderPanel.swift; sourceTree = "<group>"; };
+		A20000000000000000000020 /* HealthPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthPanel.swift; sourceTree = "<group>"; };
+		A20000000000000000000021 /* InfoRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoRow.swift; sourceTree = "<group>"; };
+		A20000000000000000000022 /* MetricGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricGrid.swift; sourceTree = "<group>"; };
+		A20000000000000000000023 /* ReadinessPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessPanel.swift; sourceTree = "<group>"; };
+		A20000000000000000000024 /* ReadinessPill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessPill.swift; sourceTree = "<group>"; };
+		A20000000000000000000025 /* ResultBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultBanner.swift; sourceTree = "<group>"; };
+		A20000000000000000000026 /* ResultPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultPanel.swift; sourceTree = "<group>"; };
+		A20000000000000000000027 /* ScreenContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenContainer.swift; sourceTree = "<group>"; };
+		A20000000000000000000029 /* ExportScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportScreen.swift; sourceTree = "<group>"; };
+		A2000000000000000000002A /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
+		A2000000000000000000002B /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
+		A2000000000000000000002C /* ExportDisplayResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportDisplayResult.swift; sourceTree = "<group>"; };
+		A2000000000000000000002D /* MetricItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricItem.swift; sourceTree = "<group>"; };
+		A2000000000000000000002E /* ReadinessState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessState.swift; sourceTree = "<group>"; };
+		A2000000000000000000002F /* HemWebEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HemWebEndpoint.swift; sourceTree = "<group>"; };
+		A20000000000000000000030 /* ExportSourceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportSourceProvider.swift; sourceTree = "<group>"; };
+		A20000000000000000000031 /* LoadingActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingActionButton.swift; sourceTree = "<group>"; };
+		A20000000000000000000032 /* TestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupport.swift; sourceTree = "<group>"; };
+		A20000000000000000000033 /* HealthMetricDefinitionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthMetricDefinitionsTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000034 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		A20000000000000000000035 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A60000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000013 /* HealthKit.framework in Frameworks */,
+				A10000000000000000000014 /* Security.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A60000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A70000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A70000000000000000000008 /* Frameworks */,
+				A70000000000000000000009 /* Products */,
+				A70000000000000000000002 /* Hem */,
+				A70000000000000000000007 /* HemTests */,
+			);
+			sourceTree = "<group>";
+		};
+		A70000000000000000000002 /* Hem */ = {
+			isa = PBXGroup;
+			children = (
+				A70000000000000000000005 /* Intents */,
+				A70000000000000000000003 /* Models */,
+				A70000000000000000000006 /* Resources */,
+				A70000000000000000000004 /* Services */,
+				A7000000000000000000000A /* Views */,
+				A20000000000000000000001 /* HemApp.swift */,
+			);
+			path = Hem;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000003 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000003 /* ExportDateFormatting.swift */,
+				A20000000000000000000004 /* ExportPayload.swift */,
+				A20000000000000000000005 /* WeekRange.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000004 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A7000000000000000000000F /* Export */,
+				A70000000000000000000010 /* Health */,
+				A70000000000000000000011 /* HemWeb */,
+				A70000000000000000000012 /* Security */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A7000000000000000000000F /* Export */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000006 /* ExportErrorPresentation.swift */,
+				A20000000000000000000030 /* ExportSourceProvider.swift */,
+				A20000000000000000000008 /* HealthExportRunner.swift */,
+				A20000000000000000000009 /* HealthExportService.swift */,
+			);
+			path = Export;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000010 /* Health */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000007 /* HealthAuthorizationService.swift */,
+				A2000000000000000000000A /* HealthMetricDefinitions.swift */,
+			);
+			path = Health;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000011 /* HemWeb */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000000B /* HemWebClient.swift */,
+				A2000000000000000000000C /* HemWebConfigurationStore.swift */,
+				A2000000000000000000002F /* HemWebEndpoint.swift */,
+			);
+			path = HemWeb;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000012 /* Security */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000000D /* KeychainStore.swift */,
+			);
+			path = Security;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000005 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000000E /* AppShortcuts.swift */,
+				A2000000000000000000000F /* ExportHealthToHemWebIntent.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000006 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000034 /* AppIcon.icon */,
+				A20000000000000000000035 /* Assets.xcassets */,
+				A20000000000000000000015 /* Info.plist */,
+				A20000000000000000000016 /* Hem.entitlements */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000007 /* HemTests */ = {
+			isa = PBXGroup;
+			children = (
+				A7000000000000000000000D /* Models */,
+				A7000000000000000000000E /* Services */,
+				A20000000000000000000032 /* TestSupport.swift */,
+			);
+			path = HemTests;
+			sourceTree = "<group>";
+		};
+		A7000000000000000000000D /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000011 /* ExportPayloadTests.swift */,
+				A20000000000000000000010 /* WeekRangeTests.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A7000000000000000000000E /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A70000000000000000000013 /* Health */,
+				A70000000000000000000014 /* HemWeb */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000013 /* Health */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000033 /* HealthMetricDefinitionsTests.swift */,
+			);
+			path = Health;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000014 /* HemWeb */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000012 /* HemWebClientTests.swift */,
+			);
+			path = HemWeb;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000008 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000013 /* HealthKit.framework */,
+				A20000000000000000000014 /* Security.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000009 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000017 /* Hem.app */,
+				A20000000000000000000018 /* HemTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A7000000000000000000000A /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A7000000000000000000000B /* Components */,
+				A7000000000000000000000C /* Support */,
+				A20000000000000000000002 /* ContentView.swift */,
+				A20000000000000000000029 /* ExportScreen.swift */,
+				A2000000000000000000002A /* SettingsScreen.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A7000000000000000000000B /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				A70000000000000000000015 /* Common */,
+				A70000000000000000000016 /* Dashboard */,
+				A70000000000000000000017 /* Export */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000015 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000001E /* FieldRow.swift */,
+				A20000000000000000000021 /* InfoRow.swift */,
+				A20000000000000000000031 /* LoadingActionButton.swift */,
+				A20000000000000000000025 /* ResultBanner.swift */,
+				A20000000000000000000027 /* ScreenContainer.swift */,
+			);
+			path = Common;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000016 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000001A /* DashboardPanel.swift */,
+				A2000000000000000000001F /* HeaderPanel.swift */,
+				A20000000000000000000020 /* HealthPanel.swift */,
+				A20000000000000000000022 /* MetricGrid.swift */,
+				A20000000000000000000023 /* ReadinessPanel.swift */,
+				A20000000000000000000024 /* ReadinessPill.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000017 /* Export */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000001B /* DateRangePicker.swift */,
+				A2000000000000000000001C /* DestinationPanel.swift */,
+				A2000000000000000000001D /* ExportPanel.swift */,
+				A20000000000000000000026 /* ResultPanel.swift */,
+			);
+			path = Export;
+			sourceTree = "<group>";
+		};
+		A7000000000000000000000C /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000002B /* AppTab.swift */,
+				A2000000000000000000002C /* ExportDisplayResult.swift */,
+				A2000000000000000000002D /* MetricItem.swift */,
+				A2000000000000000000002E /* ReadinessState.swift */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A50000000000000000000001 /* Hem */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A90000000000000000000002 /* Build configuration list for PBXNativeTarget "Hem" */;
+			buildPhases = (
+				AA0000000000000000000001 /* Sources */,
+				A60000000000000000000001 /* Frameworks */,
+				AA0000000000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Hem;
+			productName = Hem;
+			productReference = A20000000000000000000017 /* Hem.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A50000000000000000000002 /* HemTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A90000000000000000000003 /* Build configuration list for PBXNativeTarget "HemTests" */;
+			buildPhases = (
+				AA0000000000000000000003 /* Sources */,
+				A60000000000000000000002 /* Frameworks */,
+				AA0000000000000000000004 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AB0000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = HemTests;
+			productName = HemTests;
+			productReference = A20000000000000000000018 /* HemTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A40000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					A50000000000000000000001 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					A50000000000000000000002 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = A50000000000000000000001;
+					};
+				};
+			};
+			buildConfigurationList = A90000000000000000000001 /* Build configuration list for PBXProject "Hem" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A70000000000000000000001;
+			productRefGroup = A70000000000000000000009 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A50000000000000000000001 /* Hem */,
+				A50000000000000000000002 /* HemTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA0000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000030 /* AppIcon.icon in Resources */,
+				A10000000000000000000031 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000004 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA0000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000001 /* HemApp.swift in Sources */,
+				A10000000000000000000002 /* ContentView.swift in Sources */,
+				A10000000000000000000025 /* ExportScreen.swift in Sources */,
+				A10000000000000000000026 /* SettingsScreen.swift in Sources */,
+				A10000000000000000000016 /* DashboardPanel.swift in Sources */,
+				A10000000000000000000017 /* DateRangePicker.swift in Sources */,
+				A10000000000000000000018 /* DestinationPanel.swift in Sources */,
+				A10000000000000000000019 /* ExportPanel.swift in Sources */,
+				A1000000000000000000001A /* FieldRow.swift in Sources */,
+				A1000000000000000000001B /* HeaderPanel.swift in Sources */,
+				A1000000000000000000001C /* HealthPanel.swift in Sources */,
+				A1000000000000000000001D /* InfoRow.swift in Sources */,
+				A1000000000000000000001E /* MetricGrid.swift in Sources */,
+				A1000000000000000000001F /* ReadinessPanel.swift in Sources */,
+				A10000000000000000000020 /* ReadinessPill.swift in Sources */,
+				A10000000000000000000021 /* ResultBanner.swift in Sources */,
+				A10000000000000000000022 /* ResultPanel.swift in Sources */,
+				A10000000000000000000023 /* ScreenContainer.swift in Sources */,
+				A1000000000000000000002D /* LoadingActionButton.swift in Sources */,
+				A10000000000000000000027 /* AppTab.swift in Sources */,
+				A10000000000000000000028 /* ExportDisplayResult.swift in Sources */,
+				A10000000000000000000029 /* MetricItem.swift in Sources */,
+				A1000000000000000000002A /* ReadinessState.swift in Sources */,
+				A10000000000000000000003 /* ExportDateFormatting.swift in Sources */,
+				A10000000000000000000004 /* ExportPayload.swift in Sources */,
+				A10000000000000000000005 /* WeekRange.swift in Sources */,
+				A10000000000000000000006 /* ExportErrorPresentation.swift in Sources */,
+				A10000000000000000000007 /* HealthAuthorizationService.swift in Sources */,
+				A10000000000000000000008 /* HealthExportRunner.swift in Sources */,
+				A10000000000000000000009 /* HealthExportService.swift in Sources */,
+				A1000000000000000000000A /* HealthMetricDefinitions.swift in Sources */,
+				A1000000000000000000000B /* HemWebClient.swift in Sources */,
+				A1000000000000000000000C /* HemWebConfigurationStore.swift in Sources */,
+				A1000000000000000000002B /* HemWebEndpoint.swift in Sources */,
+				A1000000000000000000000D /* KeychainStore.swift in Sources */,
+				A1000000000000000000002C /* ExportSourceProvider.swift in Sources */,
+				A1000000000000000000000E /* AppShortcuts.swift in Sources */,
+				A1000000000000000000000F /* ExportHealthToHemWebIntent.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000010 /* WeekRangeTests.swift in Sources */,
+				A10000000000000000000011 /* ExportPayloadTests.swift in Sources */,
+				A10000000000000000000012 /* HemWebClientTests.swift in Sources */,
+				A1000000000000000000002E /* TestSupport.swift in Sources */,
+				A1000000000000000000002F /* HealthMetricDefinitionsTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AB0000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A50000000000000000000001 /* Hem */;
+			targetProxy = A30000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AC0000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AC0000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AC0000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Hem/Resources/Hem.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = Y54Z78V9M7;
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Hem/Resources/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.tombell.hem;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		AC0000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Hem/Resources/Hem.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = Y54Z78V9M7;
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Hem/Resources/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.tombell.hem;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		AC0000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.tombell.hem.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Hem.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Hem";
+			};
+			name = Debug;
+		};
+		AC0000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.tombell.hem.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Hem.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Hem";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A90000000000000000000001 /* Build configuration list for PBXProject "Hem" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AC0000000000000000000001 /* Debug */,
+				AC0000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A90000000000000000000002 /* Build configuration list for PBXNativeTarget "Hem" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AC0000000000000000000003 /* Debug */,
+				AC0000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A90000000000000000000003 /* Build configuration list for PBXNativeTarget "HemTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AC0000000000000000000005 /* Debug */,
+				AC0000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A40000000000000000000001 /* Project object */;
+}
