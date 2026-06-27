@@ -31,6 +31,20 @@ struct ExportCoordinator {
     try historyStore.loadRecords()
   }
 
+  func deleteRecord(id: UUID) throws {
+    var records = try historyStore.loadRecords()
+    guard let index = records.firstIndex(where: { $0.id == id }) else {
+      throw ExportCoordinatorError.recordNotFound
+    }
+
+    let record = records.remove(at: index)
+    if let payloadFileName = record.payloadFileName {
+      try historyStore.deletePayload(named: payloadFileName)
+    }
+
+    try historyStore.saveRecords(records)
+  }
+
   func prepare(
     range: WeekRange,
     mode: ExportMode = .manual,

@@ -96,7 +96,8 @@ struct ContentView: View {
       ExportHistorySheet(
         records: records,
         retryAction: retryExport,
-        diagnosticsAction: diagnosticsText
+        diagnosticsAction: diagnosticsText,
+        deleteAction: deleteRecord
       )
     }
   }
@@ -289,6 +290,16 @@ struct ContentView: View {
 
   private func diagnosticsText(recordID: UUID) -> String? {
     try? exportCoordinator.diagnostics(for: recordID).text
+  }
+
+  private func deleteRecord(recordID: UUID) {
+    do {
+      try exportCoordinator.deleteRecord(id: recordID)
+      refreshRecords()
+      lastResult = .success("Export history item removed")
+    } catch {
+      lastResult = .failure(ExportErrorPresentation.message(for: error))
+    }
   }
 }
 

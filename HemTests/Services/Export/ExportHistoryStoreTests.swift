@@ -63,6 +63,55 @@ final class ExportHistoryStoreTests: XCTestCase {
   }
 }
 
+final class ExportCoordinatorHistoryTests: XCTestCase {
+  func testDeleteRecordRemovesRecordAndQueuedPayload() throws {
+    let queued = try record(
+      requestedAt: VitalsTestFixture.date("2026-06-25T12:00:00+01:00"),
+      payloadFileName: "queued.json"
+    )
+    let succeeded = try record(requestedAt: VitalsTestFixture.date("2026-06-24T12:00:00+01:00"))
+    let store = MockExportHistoryStore(records: [queued, succeeded])
+    let coordinator = ExportCoordinator(historyStore: store)
+
+    try coordinator.deleteRecord(id: queued.id)
+
+    XCTAssertEqual(store.records, [succeeded])
+    XCTAssertEqual(store.deletedPayloads, ["queued.json"])
+  }
+
+  func testDeleteMissingRecordThrows() throws {
+    let store = MockExportHistoryStore(records: [])
+    let coordinator = ExportCoordinator(historyStore: store)
+
+    XCTAssertThrowsError(try coordinator.deleteRecord(id: UUID())) { error in
+      XCTAssertEqual(error as? ExportCoordinatorError, .recordNotFound)
+    }
+  }
+
+  private func record(requestedAt: Date, payloadFileName: String? = nil) throws -> ExportRecord {
+    ExportRecord(
+      id: UUID(),
+      range: try VitalsTestFixture.previousFullWeek(),
+      mode: .manual,
+      metrics: ExportMetricCategory.allCases,
+      status: payloadFileName == nil ? .succeeded : .queued,
+      destinationHost: "hem-web.local",
+      endpointURLString: "https://hem-web.local/apple-health/import",
+      requestedAt: requestedAt,
+      startedAt: requestedAt,
+      completedAt: requestedAt,
+      attemptCount: 1,
+      counts: .empty,
+      retrySourceID: nil,
+      payloadFileName: payloadFileName,
+      errorMessage: nil,
+      errorCode: nil,
+      httpStatus: payloadFileName == nil ? 201 : nil,
+      serverResponseSummary: nil
+    )
+  }
+}
+
 final class MetricSelectionStoreTests: XCTestCase {
   func testDefaultsToAllMetrics() {
     let suiteName = UUID().uuidString
@@ -83,5 +132,36 @@ final class MetricSelectionStoreTests: XCTestCase {
     store.save(metrics)
 
     XCTAssertEqual(store.load(), metrics)
+  }
+}
+
+private final class MockExportHistoryStore: ExportHistoryStoring {
+  var records: [ExportRecord]
+  var deletedPayloads: [String] = []
+
+  init(records: [ExportRecord]) {
+    self.records = records
+  }
+
+  func loadRecords() throws -> [ExportRecord] {
+    records
+  }
+
+  func saveRecords(_ records: [ExportRecord]) throws {
+    self.records = records
+  }
+
+  func savePayload(_ payload: ExportPayload, named fileName: String) throws {}
+
+  func loadPayload(named fileName: String) throws -> ExportPayload {
+    throw ExportCoordinatorError.recordNotFound
+  }
+
+  func deletePayload(named fileName: String) throws {
+    deletedPayloads.append(fileName)
+  }
+
+  func deleteAll() throws {
+    records = []
   }
 }

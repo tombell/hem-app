@@ -33,6 +33,7 @@ struct ExportHistorySheet: View {
   let records: [ExportRecord]
   let retryAction: (UUID) async -> Void
   let diagnosticsAction: (UUID) -> String?
+  let deleteAction: (UUID) -> Void
 
   @State private var diagnosticsText: String?
 
@@ -42,6 +43,9 @@ struct ExportHistorySheet: View {
         ForEach(records) { record in
           ExportHistoryRow(record: record, retryAction: retryAction)
             .swipeActions(edge: .trailing) {
+              Button("Delete", role: .destructive) {
+                deleteAction(record.id)
+              }
               Button("Diagnostics") {
                 diagnosticsText = diagnosticsAction(record.id)
               }
