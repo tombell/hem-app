@@ -9,8 +9,10 @@ struct SettingsScreen: View {
   let healthState: ReadinessState
   let settingsMessage: ExportDisplayResult?
   let isRequestingHealthAccess: Bool
+  let isTestingConnection: Bool
   let result: ExportDisplayResult?
   let saveAction: () -> Void
+  let testConnectionAction: () async -> Void
   let requestHealthAccessAction: () async -> Void
 
   var body: some View {
@@ -27,7 +29,9 @@ struct SettingsScreen: View {
         destinationHost: destinationHost,
         endpointState: endpointState,
         settingsMessage: settingsMessage,
-        saveAction: saveAction
+        isTestingConnection: isTestingConnection,
+        saveAction: saveAction,
+        testConnectionAction: testConnectionAction
       )
       HealthPanel(
         healthStatus: healthStatus,

@@ -5,11 +5,18 @@ struct ExportScreen: View {
   let endpointState: ReadinessState
   let tokenState: ReadinessState
   let healthState: ReadinessState
+  let records: [ExportRecord]
   @Binding var selectedStartDate: Date
   @Binding var selectedThroughDate: Date
-  let isExporting: Bool
+  @Binding var selectedMetrics: Set<ExportMetricCategory>
+  let isPreparing: Bool
+  let canExport: Bool
+  let canExportSinceLastSuccess: Bool
   let result: ExportDisplayResult?
-  let exportAction: () async -> Void
+  let previewAction: () async -> Void
+  let incrementalAction: () async -> Void
+  let retryAction: (UUID) async -> Void
+  let viewAllHistoryAction: () -> Void
 
   var body: some View {
     ScreenContainer {
@@ -27,9 +34,18 @@ struct ExportScreen: View {
       ExportPanel(
         startDate: $selectedStartDate,
         throughDate: $selectedThroughDate,
+        selectedMetrics: $selectedMetrics,
         rangeLabel: rangeLabel,
-        isExporting: isExporting,
-        exportAction: exportAction
+        isPreparing: isPreparing,
+        canExport: canExport,
+        canExportSinceLastSuccess: canExportSinceLastSuccess,
+        previewAction: previewAction,
+        incrementalAction: incrementalAction
+      )
+      ExportHistoryPanel(
+        records: records,
+        retryAction: retryAction,
+        viewAllAction: viewAllHistoryAction
       )
       ResultPanel(result: result)
     }

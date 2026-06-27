@@ -6,7 +6,9 @@ struct DestinationPanel: View {
   let destinationHost: String
   let endpointState: ReadinessState
   let settingsMessage: ExportDisplayResult?
+  let isTestingConnection: Bool
   let saveAction: () -> Void
+  let testConnectionAction: () async -> Void
 
   var body: some View {
     DashboardPanel(title: "Hem Web", systemImage: "network", tint: .blue) {
@@ -51,6 +53,15 @@ struct DestinationPanel: View {
           .frame(maxWidth: .infinity)
       }
       .buttonStyle(.borderedProminent)
+      .controlSize(.regular)
+
+      LoadingActionButton(
+        title: "Test Connection",
+        systemImage: "network",
+        isLoading: isTestingConnection,
+        action: testConnectionAction
+      )
+      .buttonStyle(.bordered)
       .controlSize(.regular)
 
       if let settingsMessage {
