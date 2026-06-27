@@ -16,10 +16,10 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
 	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
 	<string>Hem requires permission to read clinical records to be able to post to the Hem Web service.</string>
 	<key>NSHealthShareUsageDescription</key>
