@@ -2,14 +2,20 @@ import Foundation
 
 struct HealthExportRunner {
   private let coordinator: ExportCoordinator
+  private let dateRangeStore: ExportDateRangeStore
+  private let metricSelectionStore: MetricSelectionStore
 
   init(
     configurationStore: HemWebConfigurationStore = HemWebConfigurationStore(),
     exportService: HealthExportService = HealthExportService(),
     client: HemWebClient = HemWebClient(),
     historyStore: any ExportHistoryStoring = ExportHistoryStore(),
-    checkpointStore: ExportCheckpointStore = ExportCheckpointStore()
+    checkpointStore: ExportCheckpointStore = ExportCheckpointStore(),
+    dateRangeStore: ExportDateRangeStore = ExportDateRangeStore(),
+    metricSelectionStore: MetricSelectionStore = MetricSelectionStore()
   ) {
+    self.dateRangeStore = dateRangeStore
+    self.metricSelectionStore = metricSelectionStore
     coordinator = ExportCoordinator(
       configurationStore: configurationStore,
       exportService: exportService,
@@ -19,12 +25,17 @@ struct HealthExportRunner {
     )
   }
 
-  func exportPreviousFullWeek() async throws -> ExportSummary {
-    let range = WeekRange.previousFullWeek()
+  func exportSelectedDateRange() async throws -> ExportSummary {
+    let defaultRange = WeekRange.previousFullWeek()
+    let selectedRange = dateRangeStore.load(defaultRange: defaultRange)
+    let range = try WeekRange.custom(
+      from: selectedRange.startDate,
+      through: selectedRange.throughDate
+    )
     return try await coordinator.export(
       range: range,
       mode: .shortcut,
-      metrics: Set(ExportMetricCategory.allCases)
+      metrics: metricSelectionStore.load()
     )
   }
 

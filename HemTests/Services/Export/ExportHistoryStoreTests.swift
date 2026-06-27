@@ -135,6 +135,59 @@ final class MetricSelectionStoreTests: XCTestCase {
   }
 }
 
+final class ExportDateRangeStoreTests: XCTestCase {
+  func testDefaultsToProvidedRange() throws {
+    let suiteName = UUID().uuidString
+    let defaults = UserDefaults(suiteName: suiteName)!
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+    let store = ExportDateRangeStore(userDefaults: defaults)
+    let range = try VitalsTestFixture.previousFullWeek()
+
+    let dates = store.load(defaultRange: range)
+
+    XCTAssertEqual(dates.startDate, range.start)
+    XCTAssertEqual(
+      dates.throughDate,
+      Calendar.vitalsDefault.date(byAdding: .day, value: -1, to: range.end)
+    )
+  }
+
+  func testSavesSelectedDateRange() throws {
+    let suiteName = UUID().uuidString
+    let defaults = UserDefaults(suiteName: suiteName)!
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+    let store = ExportDateRangeStore(userDefaults: defaults)
+    let range = try VitalsTestFixture.previousFullWeek()
+    let startDate = try VitalsTestFixture.date("2026-06-10T09:00:00+01:00")
+    let throughDate = try VitalsTestFixture.date("2026-06-12T09:00:00+01:00")
+
+    store.save(startDate: startDate, throughDate: throughDate)
+
+    let dates = store.load(defaultRange: range)
+    XCTAssertEqual(dates.startDate, startDate)
+    XCTAssertEqual(dates.throughDate, throughDate)
+  }
+
+  func testInvalidSavedDateRangeFallsBackToDefault() throws {
+    let suiteName = UUID().uuidString
+    let defaults = UserDefaults(suiteName: suiteName)!
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+    let store = ExportDateRangeStore(userDefaults: defaults)
+    let range = try VitalsTestFixture.previousFullWeek()
+    let startDate = try VitalsTestFixture.date("2026-06-12T09:00:00+01:00")
+    let throughDate = try VitalsTestFixture.date("2026-06-10T09:00:00+01:00")
+
+    store.save(startDate: startDate, throughDate: throughDate)
+
+    let dates = store.load(defaultRange: range)
+    XCTAssertEqual(dates.startDate, range.start)
+    XCTAssertEqual(
+      dates.throughDate,
+      Calendar.vitalsDefault.date(byAdding: .day, value: -1, to: range.end)
+    )
+  }
+}
+
 private final class MockExportHistoryStore: ExportHistoryStoring {
   var records: [ExportRecord]
   var deletedPayloads: [String] = []

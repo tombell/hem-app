@@ -18,13 +18,20 @@ struct ContentView: View {
   @State private var isPreparingExport = false
   @State private var isExporting = false
   @State private var isTestingConnection = false
-  @State private var selectedStartDate = ContentView.initialRange.start
-  @State private var selectedThroughDate = ContentView.initialThroughDate
+  @State private var selectedStartDate: Date
+  @State private var selectedThroughDate: Date
   @State private var selectedMetrics = Set(ExportMetricCategory.allCases)
   @State private var records: [ExportRecord] = []
   @State private var preparedDraft: ExportDraft?
   @State private var isShowingHistory = false
   @State private var selectedTab: AppTab = .export
+
+  init(dateRangeStore: ExportDateRangeStore = ExportDateRangeStore()) {
+    self.dateRangeStore = dateRangeStore
+    let dateRange = dateRangeStore.load(defaultRange: Self.initialRange)
+    _selectedStartDate = State(initialValue: dateRange.startDate)
+    _selectedThroughDate = State(initialValue: dateRange.throughDate)
+  }
 
   var body: some View {
     TabView(selection: $selectedTab) {
@@ -77,9 +84,15 @@ struct ContentView: View {
     }
     .onChange(of: selectedStartDate) { _, newStartDate in
       let calendar = Calendar.vitalsDefault
+      var throughDate = selectedThroughDate
       if calendar.startOfDay(for: selectedThroughDate) < calendar.startOfDay(for: newStartDate) {
-        selectedThroughDate = newStartDate
+        throughDate = newStartDate
+        selectedThroughDate = throughDate
       }
+      dateRangeStore.save(startDate: newStartDate, throughDate: throughDate)
+    }
+    .onChange(of: selectedThroughDate) { _, newThroughDate in
+      dateRangeStore.save(startDate: selectedStartDate, throughDate: newThroughDate)
     }
     .onChange(of: selectedMetrics) { _, newMetrics in
       metricSelectionStore.save(newMetrics)
@@ -104,6 +117,7 @@ struct ContentView: View {
 
   private let authorizationService = HealthAuthorizationService()
   private let configurationStore = HemWebConfigurationStore()
+  private let dateRangeStore: ExportDateRangeStore
   private let metricSelectionStore = MetricSelectionStore()
   private let exportCoordinator = ExportCoordinator()
   private let hemWebClient = HemWebClient()
