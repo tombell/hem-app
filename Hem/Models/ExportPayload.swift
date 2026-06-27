@@ -65,11 +65,18 @@ extension ExportPayload {
     let date: String
     let steps: QuantityValue?
     let activeEnergy: QuantityValue?
+    let basalEnergy: QuantityValue?
     let exerciseTime: QuantityValue?
     let walkingRunningDistance: QuantityValue?
+    let cyclingDistance: QuantityValue?
+    let swimmingDistance: QuantityValue?
+    let swimmingStrokeCount: QuantityValue?
+    let flightsClimbed: QuantityValue?
 
     var hasValues: Bool {
-      steps != nil || activeEnergy != nil || exerciseTime != nil || walkingRunningDistance != nil
+      steps != nil || activeEnergy != nil || basalEnergy != nil || exerciseTime != nil
+        || walkingRunningDistance != nil || cyclingDistance != nil || swimmingDistance != nil
+        || swimmingStrokeCount != nil || flightsClimbed != nil
     }
   }
 

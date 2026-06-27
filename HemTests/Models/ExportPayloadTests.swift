@@ -17,8 +17,13 @@ final class ExportPayloadTests: XCTestCase {
           date: "2026-06-15",
           steps: .init(value: 8421, unit: "count"),
           activeEnergy: nil,
+          basalEnergy: nil,
           exerciseTime: nil,
-          walkingRunningDistance: .init(value: 6.3, unit: "km")
+          walkingRunningDistance: .init(value: 6.3, unit: "km"),
+          cyclingDistance: nil,
+          swimmingDistance: nil,
+          swimmingStrokeCount: nil,
+          flightsClimbed: nil
         )
       ],
       samples: [],

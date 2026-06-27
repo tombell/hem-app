@@ -9,6 +9,10 @@ enum ExportMetricCategory: String, CaseIterable, Codable, Identifiable, Hashable
   case sleep
   case workouts
   case bodyMass
+  case vitals
+  case bodyComposition
+  case mobility
+  case nutrition
 
   var id: String {
     rawValue
@@ -32,6 +36,14 @@ enum ExportMetricCategory: String, CaseIterable, Codable, Identifiable, Hashable
       "Workouts"
     case .bodyMass:
       "Body Mass"
+    case .vitals:
+      "Vitals"
+    case .bodyComposition:
+      "Body"
+    case .mobility:
+      "Mobility"
+    case .nutrition:
+      "Nutrition"
     }
   }
 
@@ -53,6 +65,14 @@ enum ExportMetricCategory: String, CaseIterable, Codable, Identifiable, Hashable
       "figure.run"
     case .bodyMass:
       "scalemass"
+    case .vitals:
+      "waveform.path.ecg"
+    case .bodyComposition:
+      "figure"
+    case .mobility:
+      "figure.walk.motion"
+    case .nutrition:
+      "fork.knife"
     }
   }
 
@@ -74,6 +94,14 @@ enum ExportMetricCategory: String, CaseIterable, Codable, Identifiable, Hashable
       .cyan
     case .bodyMass:
       .brown
+    case .vitals:
+      .pink
+    case .bodyComposition:
+      .teal
+    case .mobility:
+      .mint
+    case .nutrition:
+      .yellow
     }
   }
 }

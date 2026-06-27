@@ -61,8 +61,13 @@ struct HealthExportService {
         date: ExportDateFormatting.dayString(for: dayStart, calendar: calendar),
         steps: valuesByKind[.steps]?[dayStart],
         activeEnergy: valuesByKind[.activeEnergy]?[dayStart],
+        basalEnergy: valuesByKind[.basalEnergy]?[dayStart],
         exerciseTime: valuesByKind[.exerciseTime]?[dayStart],
-        walkingRunningDistance: valuesByKind[.walkingRunningDistance]?[dayStart]
+        walkingRunningDistance: valuesByKind[.walkingRunningDistance]?[dayStart],
+        cyclingDistance: valuesByKind[.cyclingDistance]?[dayStart],
+        swimmingDistance: valuesByKind[.swimmingDistance]?[dayStart],
+        swimmingStrokeCount: valuesByKind[.swimmingStrokeCount]?[dayStart],
+        flightsClimbed: valuesByKind[.flightsClimbed]?[dayStart]
       )
 
       return dailyMetric.hasValues ? dailyMetric : nil
