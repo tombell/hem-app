@@ -1,20 +1,6 @@
 import Foundation
 import Security
 
-enum KeychainStoreError: LocalizedError, Equatable {
-  case unhandledStatus(OSStatus)
-  case invalidStoredValue
-
-  var errorDescription: String? {
-    switch self {
-    case .unhandledStatus(let status):
-      "Keychain operation failed with status \(status)."
-    case .invalidStoredValue:
-      "The saved token could not be read from Keychain."
-    }
-  }
-}
-
 struct KeychainStore {
   private let service: String
 
@@ -88,5 +74,19 @@ struct KeychainStore {
       kSecAttrService as String: service,
       kSecAttrAccount as String: account,
     ]
+  }
+}
+
+enum KeychainStoreError: LocalizedError, Equatable {
+  case unhandledStatus(OSStatus)
+  case invalidStoredValue
+
+  var errorDescription: String? {
+    switch self {
+    case .unhandledStatus(let status):
+      "Keychain operation failed with status \(status)."
+    case .invalidStoredValue:
+      "The saved token could not be read from Keychain."
+    }
   }
 }

@@ -1,10 +1,5 @@
 import Foundation
 
-struct HemWebConfiguration: Equatable {
-  let endpoint: HemWebEndpoint
-  let bearerToken: String
-}
-
 struct HemWebConfigurationStore {
   private let endpointKey = "dev.tombell.hem.hemWebEndpointURL"
   private let tokenAccount = "hemWebBearerToken"
@@ -50,4 +45,9 @@ struct HemWebConfigurationStore {
       try keychainStore.save(trimmedToken, account: tokenAccount)
     }
   }
+}
+
+struct HemWebConfiguration: Equatable {
+  let endpoint: HemWebEndpoint
+  let bearerToken: String
 }

@@ -1,13 +1,5 @@
 import Foundation
 
-enum WeekRangeError: LocalizedError, Equatable {
-  case invalidDateRange
-
-  var errorDescription: String? {
-    "Choose an end date after the start date."
-  }
-}
-
 struct WeekRange: Codable, Equatable, Sendable {
   static func previousFullWeek(now: Date = Date(), calendar: Calendar = .vitalsDefault) -> WeekRange
   {
@@ -87,6 +79,14 @@ struct WeekRange: Codable, Equatable, Sendable {
     }
 
     return dates
+  }
+}
+
+enum WeekRangeError: LocalizedError, Equatable {
+  case invalidDateRange
+
+  var errorDescription: String? {
+    "Choose an end date after the start date."
   }
 }
 
