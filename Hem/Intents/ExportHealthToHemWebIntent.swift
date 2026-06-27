@@ -15,3 +15,19 @@ struct ExportHealthToHemWebIntent: AppIntent {
     }
   }
 }
+
+struct ExportPreviousDayHealthToHemWebIntent: AppIntent {
+  static var title: LocalizedStringResource = "Export Previous Day Health to Hem Web"
+  static var description = IntentDescription(
+    "Exports yesterday's Health data to the Hem Web backend.")
+  static var openAppWhenRun = false
+
+  func perform() async throws -> some IntentResult & ProvidesDialog {
+    do {
+      let summary = try await HealthExportRunner().exportPreviousDay()
+      return .result(dialog: "\(summary.intentDialog)")
+    } catch {
+      return .result(dialog: "\(ExportErrorPresentation.message(for: error))")
+    }
+  }
+}

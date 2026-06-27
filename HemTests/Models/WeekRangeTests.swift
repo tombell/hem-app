@@ -3,6 +3,33 @@ import XCTest
 @testable import Hem
 
 final class WeekRangeTests: XCTestCase {
+  func testPreviousDayUsesYesterdayBoundariesInLondon() throws {
+    let now = try VitalsTestFixture.date("2026-06-24T12:00:00+01:00")
+    let calendar = Calendar.vitalsDefault
+
+    let range = WeekRange.previousDay(now: now, calendar: calendar)
+
+    XCTAssertEqual(
+      ExportDateFormatting.dayString(for: range.start, calendar: calendar), "2026-06-23")
+    XCTAssertEqual(ExportDateFormatting.dayString(for: range.end, calendar: calendar), "2026-06-24")
+    XCTAssertEqual(range.displayLabel, "23 Jun")
+    XCTAssertEqual(range.days().count, 1)
+    XCTAssertEqual(range.kind, "previousDay")
+    XCTAssertEqual(range.timeZone, "Europe/London")
+  }
+
+  func testPreviousDayUsesCalendarDayAcrossDSTBoundary() throws {
+    let now = try VitalsTestFixture.date("2026-03-30T12:00:00+01:00")
+    let calendar = Calendar.vitalsDefault
+
+    let range = WeekRange.previousDay(now: now, calendar: calendar)
+
+    XCTAssertEqual(
+      ExportDateFormatting.dayString(for: range.start, calendar: calendar), "2026-03-29")
+    XCTAssertEqual(ExportDateFormatting.dayString(for: range.end, calendar: calendar), "2026-03-30")
+    XCTAssertEqual(range.days().count, 1)
+  }
+
   func testPreviousFullWeekUsesMondayBoundariesInLondon() throws {
     let now = try VitalsTestFixture.date("2026-06-24T12:00:00+01:00")
     let calendar = Calendar.vitalsDefault

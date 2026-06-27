@@ -13,5 +13,15 @@ struct VitalsShortcuts: AppShortcutsProvider {
       shortTitle: "Export Health",
       systemImageName: "heart.text.square"
     )
+
+    AppShortcut(
+      intent: ExportPreviousDayHealthToHemWebIntent(),
+      phrases: [
+        "Export yesterday's Health to \(.applicationName)",
+        "Export previous day health to \(.applicationName)",
+      ],
+      shortTitle: "Export Yesterday",
+      systemImageName: "calendar.badge.clock"
+    )
   }
 }

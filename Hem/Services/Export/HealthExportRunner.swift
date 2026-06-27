@@ -39,6 +39,14 @@ struct HealthExportRunner {
     )
   }
 
+  func exportPreviousDay() async throws -> ExportSummary {
+    try await coordinator.export(
+      range: WeekRange.previousDay(),
+      mode: .shortcut,
+      metrics: metricSelectionStore.load()
+    )
+  }
+
   func export(range: WeekRange) async throws -> ExportSummary {
     try await coordinator.export(
       range: range,

@@ -56,6 +56,9 @@ enum ExportDateFormatting {
     formatter.locale = Locale(identifier: "en_GB")
     formatter.timeZone = timeZone
     formatter.setLocalizedDateFormatFromTemplate("MMM d")
+    guard !calendar.isDate(start, inSameDayAs: end) else {
+      return formatter.string(from: start)
+    }
     return "\(formatter.string(from: start))-\(formatter.string(from: end))"
   }
 }
