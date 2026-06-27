@@ -27,6 +27,7 @@ struct HealthExportService {
 
     let dailyMetrics = try await dailyMetrics(for: range, including: metrics)
     let samples = try await sampleMetrics(for: range, including: metrics)
+    let categorySamples = try await categorySamples(for: range, including: metrics)
     let workouts = metrics.contains(.workouts) ? try await workouts(for: range) : []
     let sleep = metrics.contains(.sleep) ? try await sleepSamples(for: range) : []
     let source = await sourceProvider.current()
@@ -37,6 +38,7 @@ struct HealthExportService {
       range: ExportPayload.RangeMetadata(weekRange: range),
       dailyMetrics: dailyMetrics,
       samples: samples,
+      categorySamples: categorySamples,
       workouts: workouts,
       sleep: sleep
     )
@@ -50,7 +52,9 @@ struct HealthExportService {
       [HealthMetricDefinitions.DailyQuantityMetric.Kind: [Date: ExportPayload.QuantityValue]] = [:]
     for metric in HealthMetricDefinitions.dailyQuantityMetrics
     where selectedMetrics.contains(metric.exportCategory) {
-      valuesByKind[metric.kind] = try await dailyCumulativeValues(for: metric, range: range)
+      valuesByKind[metric.kind] = try await skippingUnavailableMetric(fallback: [:]) {
+        try await dailyCumulativeValues(for: metric, range: range)
+      }
     }
 
     var calendar = Calendar(identifier: .gregorian)
@@ -135,7 +139,12 @@ struct HealthExportService {
     var samples: [ExportPayload.HealthSample] = []
     for metric in HealthMetricDefinitions.sampleQuantityMetrics
     where selectedMetrics.contains(metric.exportCategory) {
-      samples.append(contentsOf: try await quantitySamples(for: metric, range: range))
+      let metricSamples: [ExportPayload.HealthSample] = try await skippingUnavailableMetric(
+        fallback: []
+      ) {
+        try await quantitySamples(for: metric, range: range)
+      }
+      samples.append(contentsOf: metricSamples)
     }
     return samples.sorted { $0.start < $1.start }
   }
@@ -155,6 +164,39 @@ struct HealthExportService {
         end: sample.endDate,
         value: sample.quantity.doubleValue(for: metric.unit).roundedForExport(),
         unit: metric.exportUnit
+      )
+    }
+  }
+
+  private func categorySamples(
+    for range: WeekRange,
+    including selectedMetrics: Set<ExportMetricCategory>
+  ) async throws -> [ExportPayload.CategorySample] {
+    var samples: [ExportPayload.CategorySample] = []
+    for metric in HealthMetricDefinitions.categoryMetrics
+    where selectedMetrics.contains(metric.exportCategory) {
+      let metricSamples: [ExportPayload.CategorySample] = try await skippingUnavailableMetric(
+        fallback: []
+      ) {
+        try await categorySamples(for: metric, range: range)
+      }
+      samples.append(contentsOf: metricSamples)
+    }
+    return samples.sorted { $0.start < $1.start }
+  }
+
+  private func categorySamples(
+    for metric: HealthMetricDefinitions.CategoryMetric,
+    range: WeekRange
+  ) async throws -> [ExportPayload.CategorySample] {
+    let categoryType = try HealthMetricDefinitions.categoryType(for: metric.identifier)
+    let samples: [HKCategorySample] = try await samples(of: categoryType, range: range)
+    return samples.map { sample in
+      ExportPayload.CategorySample(
+        type: metric.type,
+        start: sample.startDate,
+        end: sample.endDate,
+        value: metric.valueName(sample.value)
       )
     }
   }
@@ -214,12 +256,38 @@ struct HealthExportService {
     }
   }
 
+  private func skippingUnavailableMetric<Value>(
+    fallback: Value,
+    _ operation: () async throws -> Value
+  ) async throws -> Value {
+    do {
+      return try await operation()
+    } catch HealthExportError.healthTypeUnavailable(_) {
+      return fallback
+    } catch let error as HKError where error.isAuthorizationOrAvailabilityFailure {
+      return fallback
+    } catch {
+      throw error
+    }
+  }
+
   private func samplePredicate(for range: WeekRange) -> NSPredicate {
     HKQuery.predicateForSamples(
       withStart: range.start,
       end: range.end,
       options: [.strictStartDate, .strictEndDate]
     )
+  }
+}
+
+extension HKError {
+  fileprivate var isAuthorizationOrAvailabilityFailure: Bool {
+    switch code {
+    case .errorAuthorizationDenied, .errorAuthorizationNotDetermined, .errorHealthDataUnavailable:
+      true
+    default:
+      false
+    }
   }
 }
 

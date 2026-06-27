@@ -64,6 +64,7 @@
 		A10000000000000000000039 /* ExportPreviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003D /* ExportPreviewSheet.swift */; };
 		A1000000000000000000003A /* ExportHistoryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003E /* ExportHistoryPanel.swift */; };
 		A1000000000000000000003B /* ExportHistoryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003F /* ExportHistoryStoreTests.swift */; };
+		A1000000000000000000003C /* HealthAuthorizationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000040 /* HealthAuthorizationServiceTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -138,6 +139,7 @@
 		A2000000000000000000003D /* ExportPreviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportPreviewSheet.swift; sourceTree = "<group>"; };
 		A2000000000000000000003E /* ExportHistoryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportHistoryPanel.swift; sourceTree = "<group>"; };
 		A2000000000000000000003F /* ExportHistoryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportHistoryStoreTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000040 /* HealthAuthorizationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthAuthorizationServiceTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -351,6 +353,7 @@
 		A70000000000000000000013 /* Health */ = {
 			isa = PBXGroup;
 			children = (
+				A20000000000000000000040 /* HealthAuthorizationServiceTests.swift */,
 				A20000000000000000000033 /* HealthMetricDefinitionsTests.swift */,
 			);
 			path = Health;
@@ -569,6 +572,7 @@
 				A10000000000000000000011 /* ExportPayloadTests.swift in Sources */,
 				A10000000000000000000012 /* HemWebClientTests.swift in Sources */,
 				A1000000000000000000002E /* TestSupport.swift in Sources */,
+				A1000000000000000000003C /* HealthAuthorizationServiceTests.swift in Sources */,
 				A1000000000000000000002F /* HealthMetricDefinitionsTests.swift in Sources */,
 				A1000000000000000000003B /* ExportHistoryStoreTests.swift in Sources */,
 			);
@@ -697,7 +701,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Hem/Resources/Hem.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = Y54Z78V9M7;
 				ENABLE_MODULE_VERIFIER = YES;
@@ -728,7 +732,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Hem/Resources/Hem.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = Y54Z78V9M7;
 				ENABLE_MODULE_VERIFIER = YES;

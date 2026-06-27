@@ -7,6 +7,7 @@ struct ExportPayload: Codable, Equatable {
   let range: RangeMetadata
   let dailyMetrics: [DailyMetric]
   let samples: [HealthSample]
+  let categorySamples: [CategorySample]
   let workouts: [Workout]
   let sleep: [SleepSample]
 
@@ -17,6 +18,7 @@ struct ExportPayload: Codable, Equatable {
     range: RangeMetadata,
     dailyMetrics: [DailyMetric],
     samples: [HealthSample],
+    categorySamples: [CategorySample] = [],
     workouts: [Workout],
     sleep: [SleepSample]
   ) {
@@ -26,6 +28,7 @@ struct ExportPayload: Codable, Equatable {
     self.range = range
     self.dailyMetrics = dailyMetrics
     self.samples = samples
+    self.categorySamples = categorySamples
     self.workouts = workouts
     self.sleep = sleep
   }
@@ -86,6 +89,13 @@ extension ExportPayload {
     let end: Date
     let value: Double
     let unit: String
+  }
+
+  struct CategorySample: Codable, Equatable {
+    let type: String
+    let start: Date
+    let end: Date
+    let value: String
   }
 
   struct Workout: Codable, Equatable {

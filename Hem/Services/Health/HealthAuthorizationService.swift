@@ -28,9 +28,9 @@ final class HealthAuthorizationService {
       case .unavailable:
         "Health data is not available on this device."
       case .notRequested:
-        "Hem needs read access to the selected Health categories before export."
+        "Request Health access again when new export categories are added. Simulator may show Health read access as not determined until the request completes."
       case .requested:
-        "iOS does not reveal read access state. Denied categories export as unavailable."
+        "Health read access was requested for the current export categories. iOS may still show read authorization as not determined because it does not reveal read access state."
       }
     }
   }
@@ -38,6 +38,7 @@ final class HealthAuthorizationService {
   private let healthStore: HKHealthStore
   private let userDefaults: UserDefaults
   private let didRequestKey = "dev.tombell.hem.healthAuthorizationRequested"
+  private let requestedReadTypesKey = "dev.tombell.hem.healthAuthorizationRequestedReadTypes"
 
   init(healthStore: HKHealthStore = HKHealthStore(), userDefaults: UserDefaults = .standard) {
     self.healthStore = healthStore
@@ -49,7 +50,10 @@ final class HealthAuthorizationService {
       return .unavailable
     }
 
-    return userDefaults.bool(forKey: didRequestKey) ? .requested : .notRequested
+    let requestedReadTypes = userDefaults.string(forKey: requestedReadTypesKey)
+    let currentReadTypes = Self.readTypesFingerprint
+    return userDefaults.bool(forKey: didRequestKey) && requestedReadTypes == currentReadTypes
+      ? .requested : .notRequested
   }
 
   func requestAuthorization() async throws {
@@ -76,5 +80,13 @@ final class HealthAuthorizationService {
     }
 
     userDefaults.set(true, forKey: didRequestKey)
+    userDefaults.set(Self.readTypesFingerprint, forKey: requestedReadTypesKey)
+  }
+
+  static var readTypesFingerprint: String {
+    HealthMetricDefinitions.readTypes
+      .map(\.identifier)
+      .sorted()
+      .joined(separator: "\n")
   }
 }

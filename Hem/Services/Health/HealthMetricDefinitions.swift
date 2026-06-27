@@ -43,6 +43,13 @@ enum HealthMetricDefinitions {
     let exportCategory: ExportMetricCategory
   }
 
+  struct CategoryMetric {
+    let identifier: HKCategoryTypeIdentifier
+    let type: String
+    let exportCategory: ExportMetricCategory
+    let valueName: (Int) -> String
+  }
+
   private static let percentUnit = HKUnit.percent()
   private static let heartRateUnit = HKUnit.count().unitDivided(by: .minute())
   private static let millisecondUnit = HKUnit.secondUnit(with: .milli)
@@ -330,6 +337,231 @@ enum HealthMetricDefinitions {
     ),
   ]
 
+  static let categoryMetrics = [
+    CategoryMetric(
+      identifier: .mindfulSession,
+      type: "mindfulSession",
+      exportCategory: .mindfulness,
+      valueName: categoryRawValueName
+    ),
+    CategoryMetric(
+      identifier: .abdominalCramps,
+      type: "abdominalCramps",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .acne,
+      type: "acne",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .appetiteChanges,
+      type: "appetiteChanges",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .bladderIncontinence,
+      type: "bladderIncontinence",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .bloating,
+      type: "bloating",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .breastPain,
+      type: "breastPain",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .chestTightnessOrPain,
+      type: "chestTightnessOrPain",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .chills,
+      type: "chills",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .constipation,
+      type: "constipation",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .coughing,
+      type: "coughing",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .diarrhea,
+      type: "diarrhea",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .dizziness,
+      type: "dizziness",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .fainting,
+      type: "fainting",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .fatigue,
+      type: "fatigue",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .fever,
+      type: "fever",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .generalizedBodyAche,
+      type: "generalizedBodyAche",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .headache,
+      type: "headache",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .heartburn,
+      type: "heartburn",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .hotFlashes,
+      type: "hotFlashes",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .lossOfSmell,
+      type: "lossOfSmell",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .lossOfTaste,
+      type: "lossOfTaste",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .lowerBackPain,
+      type: "lowerBackPain",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .memoryLapse,
+      type: "memoryLapse",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .moodChanges,
+      type: "moodChanges",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .nausea,
+      type: "nausea",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .pelvicPain,
+      type: "pelvicPain",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .rapidPoundingOrFlutteringHeartbeat,
+      type: "rapidPoundingOrFlutteringHeartbeat",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .runnyNose,
+      type: "runnyNose",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .shortnessOfBreath,
+      type: "shortnessOfBreath",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .sinusCongestion,
+      type: "sinusCongestion",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .skippedHeartbeat,
+      type: "skippedHeartbeat",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .sleepChanges,
+      type: "sleepChanges",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .soreThroat,
+      type: "soreThroat",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .vaginalDryness,
+      type: "vaginalDryness",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .vomiting,
+      type: "vomiting",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+    CategoryMetric(
+      identifier: .wheezing,
+      type: "wheezing",
+      exportCategory: .symptoms,
+      valueName: severityValueName
+    ),
+  ]
+
   static var readTypes: Set<HKObjectType> {
     var types = Set<HKObjectType>()
 
@@ -343,6 +575,13 @@ enum HealthMetricDefinitions {
 
     if let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
       types.insert(sleepType)
+    }
+
+    let categoryTypes =
+      categoryMetrics
+      .compactMap { HKObjectType.categoryType(forIdentifier: $0.identifier) }
+    for categoryType in categoryTypes {
+      types.insert(categoryType)
     }
 
     types.insert(HKObjectType.workoutType())
@@ -363,5 +602,28 @@ enum HealthMetricDefinitions {
     }
 
     return type
+  }
+
+  private static func categoryRawValueName(_ value: Int) -> String {
+    "value-\(value)"
+  }
+
+  private static func severityValueName(_ value: Int) -> String {
+    switch HKCategoryValueSeverity(rawValue: value) {
+    case .unspecified:
+      "unspecified"
+    case .notPresent:
+      "notPresent"
+    case .mild:
+      "mild"
+    case .moderate:
+      "moderate"
+    case .severe:
+      "severe"
+    case nil:
+      "unknown-\(value)"
+    @unknown default:
+      "unknown-\(value)"
+    }
   }
 }

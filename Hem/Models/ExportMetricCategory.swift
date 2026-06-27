@@ -13,6 +13,8 @@ enum ExportMetricCategory: String, CaseIterable, Codable, Identifiable, Hashable
   case bodyComposition
   case mobility
   case nutrition
+  case mindfulness
+  case symptoms
 
   var id: String {
     rawValue
@@ -44,6 +46,10 @@ enum ExportMetricCategory: String, CaseIterable, Codable, Identifiable, Hashable
       "Mobility"
     case .nutrition:
       "Nutrition"
+    case .mindfulness:
+      "Mindfulness"
+    case .symptoms:
+      "Symptoms"
     }
   }
 
@@ -73,6 +79,10 @@ enum ExportMetricCategory: String, CaseIterable, Codable, Identifiable, Hashable
       "figure.walk.motion"
     case .nutrition:
       "fork.knife"
+    case .mindfulness:
+      "brain.head.profile"
+    case .symptoms:
+      "cross.case"
     }
   }
 
@@ -102,6 +112,10 @@ enum ExportMetricCategory: String, CaseIterable, Codable, Identifiable, Hashable
       .mint
     case .nutrition:
       .yellow
+    case .mindfulness:
+      .cyan
+    case .symptoms:
+      .red
     }
   }
 }
