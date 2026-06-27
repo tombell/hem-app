@@ -8,6 +8,10 @@ struct HemWebEndpoint: Equatable {
     importURL.host ?? "Hem Web"
   }
 
+  var testURL: URL {
+    importURL.appendingPathComponent("test")
+  }
+
   init(text: String) throws {
     let trimmedEndpoint = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmedEndpoint.isEmpty else {

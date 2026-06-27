@@ -13,6 +13,19 @@ enum HealthMetricDefinitions {
     let identifier: HKQuantityTypeIdentifier
     let unit: HKUnit
     let exportUnit: String
+
+    var exportCategory: ExportMetricCategory {
+      switch kind {
+      case .steps:
+        .steps
+      case .activeEnergy:
+        .energy
+      case .exerciseTime:
+        .exercise
+      case .walkingRunningDistance:
+        .distance
+      }
+    }
   }
 
   struct SampleQuantityMetric {
@@ -20,6 +33,15 @@ enum HealthMetricDefinitions {
     let type: String
     let unit: HKUnit
     let exportUnit: String
+
+    var exportCategory: ExportMetricCategory {
+      switch identifier {
+      case .bodyMass:
+        .bodyMass
+      default:
+        .heart
+      }
+    }
   }
 
   static let dailyQuantityMetrics = [

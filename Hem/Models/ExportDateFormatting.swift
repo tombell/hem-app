@@ -1,6 +1,22 @@
 import Foundation
 
 enum ExportDateFormatting {
+  static var jsonDecoder: JSONDecoder {
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .custom { decoder in
+      let container = try decoder.singleValueContainer()
+      let string = try container.decode(String.self)
+      guard let date = ISO8601DateFormatter().date(from: string) else {
+        throw DecodingError.dataCorruptedError(
+          in: container,
+          debugDescription: "Invalid ISO 8601 date: \(string)"
+        )
+      }
+      return date
+    }
+    return decoder
+  }
+
   static func jsonEncoder(timeZone: TimeZone) -> JSONEncoder {
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.sortedKeys]

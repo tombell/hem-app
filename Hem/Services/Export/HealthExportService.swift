@@ -1,26 +1,13 @@
 import Foundation
 import HealthKit
 
-enum HealthExportError: LocalizedError, Equatable {
-  case healthDataUnavailable
-  case healthAuthorizationFailed
-  case healthTypeUnavailable(String)
-
-  var errorDescription: String? {
-    switch self {
-    case .healthDataUnavailable:
-      "Health data is not available on this device."
-    case .healthAuthorizationFailed:
-      "Health access was not granted."
-    case .healthTypeUnavailable(let identifier):
-      "The HealthKit type \(identifier) is not available on this device."
-    }
-  }
-}
-
 struct HealthExportService {
   private let healthStore: HKHealthStore
   private let sourceProvider: ExportSourceProvider
+
+  private var sampleSortDescriptor: NSSortDescriptor {
+    NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+  }
 
   init(
     healthStore: HKHealthStore = HKHealthStore(),
@@ -30,15 +17,18 @@ struct HealthExportService {
     self.sourceProvider = sourceProvider
   }
 
-  func makePayload(for range: WeekRange) async throws -> ExportPayload {
+  func makePayload(
+    for range: WeekRange,
+    including metrics: Set<ExportMetricCategory> = Set(ExportMetricCategory.allCases)
+  ) async throws -> ExportPayload {
     guard HKHealthStore.isHealthDataAvailable() else {
       throw HealthExportError.healthDataUnavailable
     }
 
-    let dailyMetrics = try await dailyMetrics(for: range)
-    let samples = try await sampleMetrics(for: range)
-    let workouts = try await workouts(for: range)
-    let sleep = try await sleepSamples(for: range)
+    let dailyMetrics = try await dailyMetrics(for: range, including: metrics)
+    let samples = try await sampleMetrics(for: range, including: metrics)
+    let workouts = metrics.contains(.workouts) ? try await workouts(for: range) : []
+    let sleep = metrics.contains(.sleep) ? try await sleepSamples(for: range) : []
     let source = await sourceProvider.current()
 
     return ExportPayload(
@@ -52,10 +42,14 @@ struct HealthExportService {
     )
   }
 
-  private func dailyMetrics(for range: WeekRange) async throws -> [ExportPayload.DailyMetric] {
+  private func dailyMetrics(
+    for range: WeekRange,
+    including selectedMetrics: Set<ExportMetricCategory>
+  ) async throws -> [ExportPayload.DailyMetric] {
     var valuesByKind:
       [HealthMetricDefinitions.DailyQuantityMetric.Kind: [Date: ExportPayload.QuantityValue]] = [:]
-    for metric in HealthMetricDefinitions.dailyQuantityMetrics {
+    for metric in HealthMetricDefinitions.dailyQuantityMetrics
+    where selectedMetrics.contains(metric.exportCategory) {
       valuesByKind[metric.kind] = try await dailyCumulativeValues(for: metric, range: range)
     }
 
@@ -129,9 +123,13 @@ struct HealthExportService {
     }
   }
 
-  private func sampleMetrics(for range: WeekRange) async throws -> [ExportPayload.HealthSample] {
+  private func sampleMetrics(
+    for range: WeekRange,
+    including selectedMetrics: Set<ExportMetricCategory>
+  ) async throws -> [ExportPayload.HealthSample] {
     var samples: [ExportPayload.HealthSample] = []
-    for metric in HealthMetricDefinitions.sampleQuantityMetrics {
+    for metric in HealthMetricDefinitions.sampleQuantityMetrics
+    where selectedMetrics.contains(metric.exportCategory) {
       samples.append(contentsOf: try await quantitySamples(for: metric, range: range))
     }
     return samples.sorted { $0.start < $1.start }
@@ -218,9 +216,22 @@ struct HealthExportService {
       options: [.strictStartDate, .strictEndDate]
     )
   }
+}
 
-  private var sampleSortDescriptor: NSSortDescriptor {
-    NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+enum HealthExportError: LocalizedError, Equatable {
+  case healthDataUnavailable
+  case healthAuthorizationFailed
+  case healthTypeUnavailable(String)
+
+  var errorDescription: String? {
+    switch self {
+    case .healthDataUnavailable:
+      "Health data is not available on this device."
+    case .healthAuthorizationFailed:
+      "Health access was not granted."
+    case .healthTypeUnavailable(let identifier):
+      "The HealthKit type \(identifier) is not available on this device."
+    }
   }
 }
 

@@ -1,39 +1,37 @@
 import Foundation
 
 struct HealthExportRunner {
-  private let configurationStore: HemWebConfigurationStore
-  private let exportService: HealthExportService
-  private let client: HemWebClient
+  private let coordinator: ExportCoordinator
 
   init(
     configurationStore: HemWebConfigurationStore = HemWebConfigurationStore(),
     exportService: HealthExportService = HealthExportService(),
-    client: HemWebClient = HemWebClient()
+    client: HemWebClient = HemWebClient(),
+    historyStore: any ExportHistoryStoring = ExportHistoryStore(),
+    checkpointStore: ExportCheckpointStore = ExportCheckpointStore()
   ) {
-    self.configurationStore = configurationStore
-    self.exportService = exportService
-    self.client = client
+    coordinator = ExportCoordinator(
+      configurationStore: configurationStore,
+      exportService: exportService,
+      client: client,
+      historyStore: historyStore,
+      checkpointStore: checkpointStore
+    )
   }
 
   func exportPreviousFullWeek() async throws -> ExportSummary {
     let range = WeekRange.previousFullWeek()
-    return try await export(range: range)
+    return try await coordinator.export(
+      range: range,
+      mode: .shortcut,
+      metrics: Set(ExportMetricCategory.allCases)
+    )
   }
 
   func export(range: WeekRange) async throws -> ExportSummary {
-    let configuration = try configurationStore.load()
-    let payload = try await exportService.makePayload(for: range)
-    try await client.post(
-      payload: payload, endpoint: configuration.endpoint,
-      bearerToken: configuration.bearerToken)
-
-    return ExportSummary(
+    try await coordinator.export(
       range: range,
-      destinationHost: configuration.endpoint.host,
-      dailyMetricCount: payload.dailyMetrics.count,
-      sampleCount: payload.samples.count,
-      workoutCount: payload.workouts.count,
-      sleepSampleCount: payload.sleep.count
+      metrics: Set(ExportMetricCategory.allCases)
     )
   }
 }

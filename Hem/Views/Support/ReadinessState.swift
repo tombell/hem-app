@@ -1,6 +1,6 @@
 import SwiftUI
 
-enum ReadinessState {
+enum ReadinessState: Equatable {
   case ready
   case missing
   case invalid

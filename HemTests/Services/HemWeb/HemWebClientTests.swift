@@ -70,6 +70,33 @@ final class HemWebClientTests: XCTestCase {
     XCTAssertEqual(session.request?.value(forHTTPHeaderField: "Content-Type"), "application/json")
     XCTAssertNotNil(session.request?.httpBody)
   }
+
+  func testConnectionUsesAuthenticatedTestEndpoint() async throws {
+    let endpoint = try HemWebEndpoint(text: "https://hem-web.local/apple-health/import")
+    let session = MockHTTPSession(
+      data: Data(),
+      response: try XCTUnwrap(
+        HTTPURLResponse(
+          url: endpoint.testURL,
+          statusCode: 204,
+          httpVersion: nil,
+          headerFields: nil)
+      )
+    )
+    let client = HemWebClient(session: session)
+
+    let summary = try await client.testConnection(
+      endpoint: endpoint,
+      bearerToken: "secret-token"
+    )
+
+    XCTAssertEqual(summary.statusCode, 204)
+    XCTAssertEqual(session.request?.url, endpoint.testURL)
+    XCTAssertEqual(session.request?.httpMethod, "GET")
+    XCTAssertEqual(
+      session.request?.value(forHTTPHeaderField: "Authorization"), "Bearer secret-token")
+    XCTAssertNil(session.request?.httpBody)
+  }
 }
 
 private final class MockHTTPSession: HTTPSession {
