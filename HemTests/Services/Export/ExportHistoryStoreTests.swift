@@ -1,3 +1,4 @@
+import Foundation
 import XCTest
 
 @testable import Hem
@@ -64,6 +65,63 @@ final class ExportHistoryStoreTests: XCTestCase {
 }
 
 final class ExportCoordinatorHistoryTests: XCTestCase {
+  func testShortcutSendAddsHistoryRecord() async throws {
+    let suiteName = UUID().uuidString
+    let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+
+    let keychainStore = KeychainStore(service: "dev.tombell.hem.tests.\(UUID().uuidString)")
+    defer { try? keychainStore.delete(account: "hemWebBearerToken") }
+
+    let endpoint = try HemWebEndpoint(text: "https://hem-web.local")
+    let configurationStore = HemWebConfigurationStore(
+      userDefaults: defaults,
+      keychainStore: keychainStore
+    )
+    try configurationStore.save(
+      endpointText: endpoint.importURL.absoluteString,
+      bearerToken: "token"
+    )
+
+    let response = try XCTUnwrap(
+      HTTPURLResponse(
+        url: endpoint.importURL,
+        statusCode: 201,
+        httpVersion: nil,
+        headerFields: nil)
+    )
+    let store = MockExportHistoryStore(records: [])
+    let requestedAt = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let recordID = UUID()
+    let coordinator = ExportCoordinator(
+      configurationStore: configurationStore,
+      client: HemWebClient(session: MockHTTPSession(data: Data(), response: response)),
+      historyStore: store,
+      uuid: { recordID },
+      now: { requestedAt }
+    )
+    let range = try VitalsTestFixture.previousFullWeek()
+    let payload = try VitalsTestFixture.payload()
+    let draft = ExportDraft(
+      range: range,
+      mode: .shortcut,
+      metrics: ExportMetricCategory.allCases,
+      destinationHost: endpoint.host,
+      endpointURLString: endpoint.importURL.absoluteString,
+      payload: payload,
+      counts: ExportCounts(payload: payload, range: range),
+      warnings: []
+    )
+
+    _ = try await coordinator.send(draft)
+
+    let record = try XCTUnwrap(store.records.first)
+    XCTAssertEqual(record.id, recordID)
+    XCTAssertEqual(record.mode, .shortcut)
+    XCTAssertEqual(record.status, .succeeded)
+    XCTAssertEqual(record.httpStatus, 201)
+  }
+
   func testDeleteRecordRemovesRecordAndQueuedPayload() throws {
     let queued = try record(
       requestedAt: VitalsTestFixture.date("2026-06-25T12:00:00+01:00"),
@@ -216,5 +274,19 @@ private final class MockExportHistoryStore: ExportHistoryStoring {
 
   func deleteAll() throws {
     records = []
+  }
+}
+
+private final class MockHTTPSession: HTTPSession {
+  private let dataValue: Data
+  private let responseValue: URLResponse
+
+  init(data: Data, response: URLResponse) {
+    dataValue = data
+    responseValue = response
+  }
+
+  func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+    return (dataValue, responseValue)
   }
 }

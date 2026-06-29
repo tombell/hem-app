@@ -9,6 +9,8 @@ struct ContentView: View {
       to: initialRange.end
     ) ?? initialRange.start
 
+  @Environment(\.scenePhase) private var scenePhase
+
   @State private var endpointText = ""
   @State private var bearerToken = ""
   @State private var healthStatus: HealthAuthorizationService.Status = .unknown
@@ -80,6 +82,13 @@ struct ContentView: View {
       refreshRecords()
       refreshHealthStatus()
       await exportCoordinator.drainQueue()
+      refreshRecords()
+    }
+    .onChange(of: scenePhase) { _, newPhase in
+      guard newPhase == .active else {
+        return
+      }
+
       refreshRecords()
     }
     .onChange(of: selectedStartDate) { _, newStartDate in

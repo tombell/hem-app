@@ -117,6 +117,34 @@ extension ExportStatus {
   }
 }
 
+extension ExportMode {
+  fileprivate var historyTitle: String {
+    switch self {
+    case .manual:
+      "Manual"
+    case .retry:
+      "Retry"
+    case .incremental:
+      "Since last success"
+    case .shortcut:
+      "Shortcut"
+    }
+  }
+
+  fileprivate var historySystemImage: String {
+    switch self {
+    case .manual:
+      "hand.tap"
+    case .retry:
+      "arrow.clockwise"
+    case .incremental:
+      "clock.arrow.circlepath"
+    case .shortcut:
+      "sparkles"
+    }
+  }
+}
+
 private struct ExportHistoryRow: View {
   let record: ExportRecord
   let retryAction: (UUID) async -> Void
@@ -135,9 +163,12 @@ private struct ExportHistoryRow: View {
           .foregroundStyle(.secondary)
       }
 
-      Text(record.destinationHost)
-        .font(.footnote)
-        .foregroundStyle(.secondary)
+      HStack(spacing: 8) {
+        Label(record.mode.historyTitle, systemImage: record.mode.historySystemImage)
+        Text(record.destinationHost)
+      }
+      .font(.footnote)
+      .foregroundStyle(.secondary)
 
       if let errorMessage = record.errorMessage,
         record.status == .failed || record.status == .queued
