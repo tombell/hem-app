@@ -18,6 +18,30 @@ final class WeekRangeTests: XCTestCase {
     XCTAssertEqual(range.timeZone, "Europe/London")
   }
 
+  func testPreviousDayUsesPreviousCalendarDateJustAfterMidnight() throws {
+    let calendar = Calendar.vitalsDefault
+    let julyFirstRun = WeekRange.previousDay(
+      now: try VitalsTestFixture.date("2026-07-01T00:10:00+01:00"),
+      calendar: calendar
+    )
+    let juneThirtiethRun = WeekRange.previousDay(
+      now: try VitalsTestFixture.date("2026-06-30T00:10:00+01:00"),
+      calendar: calendar
+    )
+
+    XCTAssertEqual(
+      ExportDateFormatting.dayString(for: julyFirstRun.start, calendar: calendar), "2026-06-30")
+    XCTAssertEqual(
+      ExportDateFormatting.dayString(for: julyFirstRun.end, calendar: calendar), "2026-07-01")
+    XCTAssertEqual(julyFirstRun.displayLabel, "30 Jun")
+    XCTAssertEqual(
+      ExportDateFormatting.dayString(for: juneThirtiethRun.start, calendar: calendar),
+      "2026-06-29")
+    XCTAssertEqual(
+      ExportDateFormatting.dayString(for: juneThirtiethRun.end, calendar: calendar), "2026-06-30")
+    XCTAssertEqual(juneThirtiethRun.displayLabel, "29 Jun")
+  }
+
   func testPreviousDayUsesCalendarDayAcrossDSTBoundary() throws {
     let now = try VitalsTestFixture.date("2026-03-30T12:00:00+01:00")
     let calendar = Calendar.vitalsDefault
