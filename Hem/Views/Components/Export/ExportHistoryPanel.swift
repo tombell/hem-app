@@ -158,9 +158,10 @@ private struct ExportHistoryRow: View {
 
         Spacer(minLength: 0)
 
-        Text(record.range.displayLabel)
+        Label("For \(record.range.displayLabel)", systemImage: "calendar")
           .font(.caption)
           .foregroundStyle(.secondary)
+          .labelStyle(.titleAndIcon)
       }
 
       HStack(spacing: 8) {
