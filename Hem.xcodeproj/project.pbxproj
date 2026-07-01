@@ -62,7 +62,7 @@
 		A10000000000000000000037 /* ExportCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003B /* ExportCoordinator.swift */; };
 		A10000000000000000000038 /* MetricSelectionGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003C /* MetricSelectionGrid.swift */; };
 		A10000000000000000000039 /* ExportPreviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003D /* ExportPreviewSheet.swift */; };
-		A1000000000000000000003A /* ExportHistoryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003E /* ExportHistoryPanel.swift */; };
+		A1000000000000000000003A /* HistoryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003E /* HistoryScreen.swift */; };
 		A1000000000000000000003B /* ExportHistoryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003F /* ExportHistoryStoreTests.swift */; };
 		A1000000000000000000003C /* HealthAuthorizationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000040 /* HealthAuthorizationServiceTests.swift */; };
 /* End PBXBuildFile section */
@@ -137,7 +137,7 @@
 		A2000000000000000000003B /* ExportCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportCoordinator.swift; sourceTree = "<group>"; };
 		A2000000000000000000003C /* MetricSelectionGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricSelectionGrid.swift; sourceTree = "<group>"; };
 		A2000000000000000000003D /* ExportPreviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportPreviewSheet.swift; sourceTree = "<group>"; };
-		A2000000000000000000003E /* ExportHistoryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportHistoryPanel.swift; sourceTree = "<group>"; };
+		A2000000000000000000003E /* HistoryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryScreen.swift; sourceTree = "<group>"; };
 		A2000000000000000000003F /* ExportHistoryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportHistoryStoreTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000040 /* HealthAuthorizationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthAuthorizationServiceTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -263,6 +263,7 @@
 				A7000000000000000000000C /* Support */,
 				A20000000000000000000002 /* ContentView.swift */,
 				A20000000000000000000029 /* ExportScreen.swift */,
+				A2000000000000000000003E /* HistoryScreen.swift */,
 				A2000000000000000000002A /* SettingsScreen.swift */,
 			);
 			path = Views;
@@ -397,7 +398,6 @@
 			children = (
 				A2000000000000000000001B /* DateRangePicker.swift */,
 				A2000000000000000000001C /* DestinationPanel.swift */,
-				A2000000000000000000003E /* ExportHistoryPanel.swift */,
 				A2000000000000000000001D /* ExportPanel.swift */,
 				A2000000000000000000003D /* ExportPreviewSheet.swift */,
 				A2000000000000000000003C /* MetricSelectionGrid.swift */,
@@ -534,7 +534,7 @@
 				A10000000000000000000023 /* ScreenContainer.swift in Sources */,
 				A1000000000000000000002D /* LoadingActionButton.swift in Sources */,
 				A10000000000000000000039 /* ExportPreviewSheet.swift in Sources */,
-				A1000000000000000000003A /* ExportHistoryPanel.swift in Sources */,
+				A1000000000000000000003A /* HistoryScreen.swift in Sources */,
 				A10000000000000000000038 /* MetricSelectionGrid.swift in Sources */,
 				A10000000000000000000027 /* AppTab.swift in Sources */,
 				A10000000000000000000028 /* ExportDisplayResult.swift in Sources */,

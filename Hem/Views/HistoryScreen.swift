@@ -1,35 +1,6 @@
 import SwiftUI
 
-struct ExportHistoryPanel: View {
-  let records: [ExportRecord]
-  let retryAction: (UUID) async -> Void
-  let viewAllAction: () -> Void
-
-  var body: some View {
-    DashboardPanel(title: "History", systemImage: "clock.arrow.circlepath", tint: .indigo) {
-      if records.isEmpty {
-        Text("No exports yet")
-          .font(.footnote)
-          .foregroundStyle(.secondary)
-      } else {
-        ForEach(records.prefix(3)) { record in
-          ExportHistoryRow(record: record, retryAction: retryAction)
-          if record.id != records.prefix(3).last?.id {
-            Divider()
-          }
-        }
-
-        Button(action: viewAllAction) {
-          Label("View All", systemImage: "list.bullet")
-            .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.bordered)
-      }
-    }
-  }
-}
-
-struct ExportHistorySheet: View {
+struct HistoryScreen: View {
   let records: [ExportRecord]
   let retryAction: (UUID) async -> Void
   let diagnosticsAction: (UUID) -> String?
@@ -39,21 +10,32 @@ struct ExportHistorySheet: View {
 
   var body: some View {
     NavigationStack {
-      List {
-        ForEach(records) { record in
-          ExportHistoryRow(record: record, retryAction: retryAction)
-            .swipeActions(edge: .trailing) {
-              Button("Delete", role: .destructive) {
-                deleteAction(record.id)
-              }
-              Button("Diagnostics") {
-                diagnosticsText = diagnosticsAction(record.id)
-              }
+      Group {
+        if records.isEmpty {
+          ContentUnavailableView(
+            "No exports yet",
+            systemImage: "clock.arrow.circlepath",
+            description: Text("Completed, queued, and failed exports will appear here.")
+          )
+        } else {
+          List {
+            ForEach(records) { record in
+              ExportHistoryRow(record: record, retryAction: retryAction)
+                .swipeActions(edge: .trailing) {
+                  Button("Delete", role: .destructive) {
+                    deleteAction(record.id)
+                  }
+                  Button("Diagnostics") {
+                    diagnosticsText = diagnosticsAction(record.id)
+                  }
+                }
+                .contentShape(Rectangle())
             }
+          }
+          .listStyle(.insetGrouped)
         }
       }
-      .navigationTitle("Export History")
-      .navigationBarTitleDisplayMode(.inline)
+      .navigationTitle("History")
       .alert("Diagnostics", isPresented: diagnosticsBinding) {
         Button("OK", role: .cancel) {
           diagnosticsText = nil
@@ -74,6 +56,56 @@ struct ExportHistorySheet: View {
       }
     )
   }
+}
+
+#Preview {
+  HistoryScreen(
+    records: [
+      ExportRecord(
+        id: UUID(),
+        range: WeekRange.previousDay(),
+        mode: .shortcut,
+        metrics: ExportMetricCategory.allCases,
+        status: .succeeded,
+        destinationHost: "hem-web.local",
+        endpointURLString: "https://hem-web.local/apple-health/import",
+        requestedAt: Date(),
+        startedAt: Date(),
+        completedAt: Date(),
+        attemptCount: 1,
+        counts: .empty,
+        retrySourceID: nil,
+        payloadFileName: nil,
+        errorMessage: nil,
+        errorCode: nil,
+        httpStatus: 201,
+        serverResponseSummary: nil
+      ),
+      ExportRecord(
+        id: UUID(),
+        range: WeekRange.previousFullWeek(),
+        mode: .manual,
+        metrics: ExportMetricCategory.allCases,
+        status: .queued,
+        destinationHost: "hem-web.local",
+        endpointURLString: "https://hem-web.local/apple-health/import",
+        requestedAt: Date(),
+        startedAt: Date(),
+        completedAt: nil,
+        attemptCount: 1,
+        counts: .empty,
+        retrySourceID: nil,
+        payloadFileName: "queued.json",
+        errorMessage: "The network connection was lost.",
+        errorCode: "URLError",
+        httpStatus: nil,
+        serverResponseSummary: nil
+      ),
+    ],
+    retryAction: { _ in },
+    diagnosticsAction: { _ in "No diagnostics" },
+    deleteAction: { _ in }
+  )
 }
 
 extension ExportStatus {

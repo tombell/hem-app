@@ -25,7 +25,6 @@ struct ContentView: View {
   @State private var selectedMetrics = Set(ExportMetricCategory.allCases)
   @State private var records: [ExportRecord] = []
   @State private var preparedDraft: ExportDraft?
-  @State private var isShowingHistory = false
   @State private var selectedTab: AppTab = .export
 
   init(dateRangeStore: ExportDateRangeStore = ExportDateRangeStore()) {
@@ -42,7 +41,6 @@ struct ContentView: View {
         endpointState: endpointState,
         tokenState: tokenState,
         healthState: healthState,
-        records: records,
         selectedStartDate: $selectedStartDate,
         selectedThroughDate: $selectedThroughDate,
         selectedMetrics: $selectedMetrics,
@@ -51,12 +49,19 @@ struct ContentView: View {
         canExportSinceLastSuccess: canExportSinceLastSuccess,
         result: lastResult,
         previewAction: preparePreview,
-        incrementalAction: exportSinceLastSuccess,
-        retryAction: retryExport,
-        viewAllHistoryAction: { isShowingHistory = true }
+        incrementalAction: exportSinceLastSuccess
       )
       .tabItem { AppTab.export.label }
       .tag(AppTab.export)
+
+      HistoryScreen(
+        records: records,
+        retryAction: retryExport,
+        diagnosticsAction: diagnosticsText,
+        deleteAction: deleteRecord
+      )
+      .tabItem { AppTab.history.label }
+      .tag(AppTab.history)
 
       SettingsScreen(
         endpointText: $endpointText,
@@ -91,6 +96,13 @@ struct ContentView: View {
 
       refreshRecords()
     }
+    .onChange(of: selectedTab) { _, newTab in
+      guard newTab == .history else {
+        return
+      }
+
+      refreshRecords()
+    }
     .onChange(of: selectedStartDate) { _, newStartDate in
       let calendar = Calendar.vitalsDefault
       var throughDate = selectedThroughDate
@@ -113,14 +125,6 @@ struct ContentView: View {
       ) {
         await sendPreparedDraft()
       }
-    }
-    .sheet(isPresented: $isShowingHistory) {
-      ExportHistorySheet(
-        records: records,
-        retryAction: retryExport,
-        diagnosticsAction: diagnosticsText,
-        deleteAction: deleteRecord
-      )
     }
   }
 
