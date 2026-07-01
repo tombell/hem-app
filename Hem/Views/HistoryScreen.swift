@@ -203,6 +203,10 @@ private struct ExportHistoryRow: View {
       .font(.footnote)
       .foregroundStyle(.secondary)
 
+      Label("Created \(record.createdDayLabel)", systemImage: "calendar.badge.clock")
+        .font(.footnote)
+        .foregroundStyle(.secondary)
+
       if let errorMessage = record.errorMessage,
         record.status == .failed || record.status == .queued
       {
@@ -224,5 +228,15 @@ private struct ExportHistoryRow: View {
         .controlSize(.small)
       }
     }
+  }
+}
+
+extension ExportRecord {
+  fileprivate var createdDayLabel: String {
+    ExportDateFormatting.rangeLabel(
+      start: requestedAt,
+      end: requestedAt,
+      timeZone: range.resolvedTimeZone
+    )
   }
 }
