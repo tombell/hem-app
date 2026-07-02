@@ -1,8 +1,12 @@
 import Foundation
+import HealthKit
 
 struct ExportCoordinator {
+  private static let deferredHealthAccessMessage =
+    "Health access is not available while the iPhone is locked. Hem will retry after unlock."
+
   private let configurationStore: HemWebConfigurationStore
-  private let exportService: HealthExportService
+  private let exportService: any HealthExportServicing
   private let client: HemWebClient
   private let historyStore: any ExportHistoryStoring
   private let checkpointStore: ExportCheckpointStore
@@ -11,7 +15,7 @@ struct ExportCoordinator {
 
   init(
     configurationStore: HemWebConfigurationStore = HemWebConfigurationStore(),
-    exportService: HealthExportService = HealthExportService(),
+    exportService: any HealthExportServicing = HealthExportService(),
     client: HemWebClient = HemWebClient(),
     historyStore: any ExportHistoryStoring = ExportHistoryStore(),
     checkpointStore: ExportCheckpointStore = ExportCheckpointStore(),
@@ -88,7 +92,7 @@ struct ExportCoordinator {
     } catch {
       record.completedAt = now()
       record.errorMessage = ExportErrorPresentation.message(for: error)
-      record.errorCode = String(describing: type(of: error))
+      record.errorCode = errorCode(for: error)
 
       if shouldQueue(error) {
         let payloadFileName = "\(record.id.uuidString).json"
@@ -125,7 +129,25 @@ struct ExportCoordinator {
     do {
       draft = try await prepare(range: range, mode: mode, metrics: metrics)
     } catch {
-      try? recordPreparationFailure(range: range, mode: mode, metrics: metrics, error: error)
+      if shouldDeferPreparationFailure(error, mode: mode) {
+        try? recordPreparationFailure(
+          range: range,
+          mode: mode,
+          metrics: metrics,
+          status: .queued,
+          error: error,
+          errorMessage: Self.deferredHealthAccessMessage
+        )
+        throw ExportCoordinatorError.exportDeferred
+      }
+
+      try? recordPreparationFailure(
+        range: range,
+        mode: mode,
+        metrics: metrics,
+        status: .failed,
+        error: error
+      )
       throw error
     }
 
@@ -160,6 +182,10 @@ struct ExportCoordinator {
       throw ExportCoordinatorError.recordNotFound
     }
 
+    if record.status == .queued {
+      return try await completeQueuedRecord(recordID: record.id)
+    }
+
     if let payloadFileName = record.payloadFileName {
       let configuration = try configurationStore.load()
       let payload = try historyStore.loadPayload(named: payloadFileName)
@@ -190,7 +216,7 @@ struct ExportCoordinator {
     }
 
     for record in records.reversed() where record.status == .queued {
-      _ = try? await retry(recordID: record.id)
+      _ = try? await completeQueuedRecord(recordID: record.id)
     }
   }
 
@@ -252,7 +278,9 @@ struct ExportCoordinator {
     range: WeekRange,
     mode: ExportMode,
     metrics: Set<ExportMetricCategory>,
-    error: Error
+    status: ExportStatus,
+    error: Error,
+    errorMessage: String? = nil
   ) throws {
     let requestedAt = now()
     let destination = destinationSnapshot()
@@ -261,24 +289,162 @@ struct ExportCoordinator {
       range: range,
       mode: mode,
       metrics: ordered(metrics),
-      status: .failed,
+      status: status,
       destinationHost: destination.host,
       endpointURLString: destination.endpointURLString,
       requestedAt: requestedAt,
       startedAt: requestedAt,
-      completedAt: requestedAt,
+      completedAt: status == .queued ? nil : requestedAt,
       attemptCount: 1,
       counts: .empty,
       retrySourceID: nil,
       payloadFileName: nil,
-      errorMessage: ExportErrorPresentation.message(for: error),
-      errorCode: String(describing: type(of: error)),
+      errorMessage: errorMessage ?? ExportErrorPresentation.message(for: error),
+      errorCode: errorCode(for: error),
       httpStatus: nil,
       serverResponseSummary: nil
     )
 
     var records = try historyStore.loadRecords()
     records.insert(record, at: 0)
+    try historyStore.saveRecords(records)
+  }
+
+  private func completeQueuedRecord(recordID: UUID) async throws -> ExportSummary {
+    let draft: ExportDraft
+    do {
+      draft = try await draftForQueuedRecord(recordID: recordID)
+    } catch {
+      try? recordQueuedPreparationFailure(recordID: recordID, error: error)
+      if isHealthDatabaseInaccessible(error) {
+        throw ExportCoordinatorError.exportDeferred
+      }
+      throw error
+    }
+
+    return try await sendQueued(draft, recordID: recordID)
+  }
+
+  private func draftForQueuedRecord(recordID: UUID) async throws -> ExportDraft {
+    let records = try historyStore.loadRecords()
+    guard let record = records.first(where: { $0.id == recordID }) else {
+      throw ExportCoordinatorError.recordNotFound
+    }
+
+    if let payloadFileName = record.payloadFileName {
+      let configuration = try configurationStore.load()
+      let payload = try historyStore.loadPayload(named: payloadFileName)
+      return ExportDraft(
+        range: record.range,
+        mode: record.mode,
+        metrics: record.metrics,
+        destinationHost: configuration.endpoint.host,
+        endpointURLString: configuration.endpoint.importURL.absoluteString,
+        payload: payload,
+        counts: ExportCounts(payload: payload, range: record.range),
+        warnings: warnings(for: payload, selectedMetrics: Set(record.metrics))
+      )
+    }
+
+    return try await prepare(
+      range: record.range,
+      mode: record.mode,
+      metrics: Set(record.metrics)
+    )
+  }
+
+  private func sendQueued(_ draft: ExportDraft, recordID: UUID) async throws -> ExportSummary {
+    let configuration = try configurationStore.load()
+    var records = try historyStore.loadRecords()
+    guard var record = records.first(where: { $0.id == recordID }) else {
+      throw ExportCoordinatorError.recordNotFound
+    }
+
+    let queuedPayloadFileName = record.payloadFileName
+    record.startedAt = now()
+    record.completedAt = nil
+    record.attemptCount += 1
+    record.status = .sending
+    record.destinationHost = configuration.endpoint.host
+    record.endpointURLString = configuration.endpoint.importURL.absoluteString
+    record.counts = draft.counts
+    record.errorMessage = nil
+    record.errorCode = nil
+    record.httpStatus = nil
+    record.serverResponseSummary = nil
+    try replace(record, in: &records)
+    try historyStore.saveRecords(records)
+
+    do {
+      let responseSummary = try await client.post(
+        payload: draft.payload,
+        endpoint: configuration.endpoint,
+        bearerToken: configuration.bearerToken
+      )
+      record.status = .succeeded
+      record.completedAt = now()
+      record.httpStatus = responseSummary.statusCode
+      record.serverResponseSummary = responseSummary.bodySummary
+      record.errorMessage = nil
+      record.errorCode = nil
+      record.payloadFileName = nil
+      checkpointStore.saveLastSuccessEnd(draft.range.end)
+      if let queuedPayloadFileName {
+        try? historyStore.deletePayload(named: queuedPayloadFileName)
+      }
+    } catch {
+      record.completedAt = now()
+      record.errorMessage = ExportErrorPresentation.message(for: error)
+      record.errorCode = errorCode(for: error)
+
+      if shouldQueue(error) {
+        if record.payloadFileName == nil {
+          let payloadFileName = "\(record.id.uuidString).json"
+          try historyStore.savePayload(draft.payload, named: payloadFileName)
+          record.payloadFileName = payloadFileName
+        }
+        record.status = .queued
+      } else {
+        record.status = .failed
+      }
+
+      var failedRecords = try historyStore.loadRecords()
+      try replace(record, in: &failedRecords)
+      try historyStore.saveRecords(failedRecords)
+      throw error
+    }
+
+    var completedRecords = try historyStore.loadRecords()
+    try replace(record, in: &completedRecords)
+    try historyStore.saveRecords(completedRecords)
+    return ExportSummary(
+      range: draft.range,
+      destinationHost: draft.destinationHost,
+      dailyMetricCount: draft.counts.dailyMetricCount,
+      sampleCount: draft.counts.sampleCount,
+      workoutCount: draft.counts.workoutCount,
+      sleepSampleCount: draft.counts.sleepSampleCount
+    )
+  }
+
+  private func recordQueuedPreparationFailure(recordID: UUID, error: Error) throws {
+    var records = try historyStore.loadRecords()
+    guard var record = records.first(where: { $0.id == recordID }) else {
+      throw ExportCoordinatorError.recordNotFound
+    }
+
+    record.errorCode = errorCode(for: error)
+    if isHealthDatabaseInaccessible(error) {
+      record.status = .queued
+      record.completedAt = nil
+      record.errorMessage = Self.deferredHealthAccessMessage
+    } else {
+      record.status = .failed
+      record.completedAt = now()
+      record.errorMessage = ExportErrorPresentation.message(for: error)
+    }
+
+    try replace(record, in: &records)
     try historyStore.saveRecords(records)
   }
 
@@ -349,15 +515,47 @@ struct ExportCoordinator {
 
     return false
   }
+
+  private func shouldDeferPreparationFailure(_ error: Error, mode: ExportMode) -> Bool {
+    mode == .shortcut && isHealthDatabaseInaccessible(error)
+  }
+
+  private func isHealthDatabaseInaccessible(_ error: Error) -> Bool {
+    guard let hkError = error as? HKError else {
+      return false
+    }
+
+    return hkError.code == .errorDatabaseInaccessible
+  }
+
+  private func errorCode(for error: Error) -> String {
+    if error is HKError {
+      return "HKError"
+    }
+
+    return String(describing: type(of: error))
+  }
 }
 
 enum ExportCoordinatorError: LocalizedError, Equatable {
   case recordNotFound
+  case exportDeferred
 
   var errorDescription: String? {
     switch self {
     case .recordNotFound:
       "The export record could not be found."
+    case .exportDeferred:
+      "Queued export until Health data is available after unlock."
     }
   }
 }
+
+protocol HealthExportServicing {
+  func makePayload(
+    for range: WeekRange,
+    including metrics: Set<ExportMetricCategory>
+  ) async throws -> ExportPayload
+}
+
+extension HealthExportService: HealthExportServicing {}

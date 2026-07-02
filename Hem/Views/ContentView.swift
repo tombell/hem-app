@@ -94,7 +94,10 @@ struct ContentView: View {
         return
       }
 
-      refreshRecords()
+      Task {
+        await exportCoordinator.drainQueue()
+        refreshRecords()
+      }
     }
     .onChange(of: selectedTab) { _, newTab in
       guard newTab == .history else {

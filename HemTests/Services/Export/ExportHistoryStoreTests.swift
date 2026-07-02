@@ -1,4 +1,5 @@
 import Foundation
+import HealthKit
 import XCTest
 
 @testable import Hem
@@ -174,6 +175,145 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     XCTAssertNil(record.httpStatus)
   }
 
+  func testShortcutLockedHealthPreparationQueuesHistoryRecord() async throws {
+    let deferredMessage =
+      "Health access is not available while the iPhone is locked. Hem will retry after unlock."
+    let suiteName = UUID().uuidString
+    let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+
+    let keychainStore = KeychainStore(service: "dev.tombell.hem.tests.\(UUID().uuidString)")
+    defer { try? keychainStore.delete(account: "hemWebBearerToken") }
+
+    let endpoint = try HemWebEndpoint(text: "https://hem-web.local")
+    let configurationStore = HemWebConfigurationStore(
+      userDefaults: defaults,
+      keychainStore: keychainStore
+    )
+    try configurationStore.save(
+      endpointText: endpoint.importURL.absoluteString,
+      bearerToken: "token"
+    )
+
+    let store = MockExportHistoryStore(records: [])
+    let requestedAt = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let recordID = UUID()
+    let coordinator = ExportCoordinator(
+      configurationStore: configurationStore,
+      exportService: MockHealthExportService { _, _ in
+        throw HKError(.errorDatabaseInaccessible)
+      },
+      historyStore: store,
+      uuid: { recordID },
+      now: { requestedAt }
+    )
+    let range = try VitalsTestFixture.previousFullWeek()
+
+    do {
+      _ = try await coordinator.export(range: range, mode: .shortcut, metrics: [.steps])
+      XCTFail("Expected shortcut export to defer while HealthKit is locked.")
+    } catch {
+      XCTAssertEqual(error as? ExportCoordinatorError, .exportDeferred)
+    }
+
+    let record = try XCTUnwrap(store.records.first)
+    XCTAssertEqual(record.id, recordID)
+    XCTAssertEqual(record.mode, .shortcut)
+    XCTAssertEqual(record.metrics, [.steps])
+    XCTAssertEqual(record.status, .queued)
+    XCTAssertEqual(record.destinationHost, endpoint.host)
+    XCTAssertEqual(record.endpointURLString, endpoint.importURL.absoluteString)
+    XCTAssertEqual(record.requestedAt, requestedAt)
+    XCTAssertEqual(record.startedAt, requestedAt)
+    XCTAssertNil(record.completedAt)
+    XCTAssertEqual(record.counts, .empty)
+    XCTAssertEqual(record.errorMessage, deferredMessage)
+    XCTAssertEqual(record.errorCode, "HKError")
+    XCTAssertNil(record.payloadFileName)
+    XCTAssertNil(record.httpStatus)
+  }
+
+  func testDrainQueueCompletesDeferredShortcutRecord() async throws {
+    let deferredMessage =
+      "Health access is not available while the iPhone is locked. Hem will retry after unlock."
+    let suiteName = UUID().uuidString
+    let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+
+    let keychainStore = KeychainStore(service: "dev.tombell.hem.tests.\(UUID().uuidString)")
+    defer { try? keychainStore.delete(account: "hemWebBearerToken") }
+
+    let endpoint = try HemWebEndpoint(text: "https://hem-web.local")
+    let configurationStore = HemWebConfigurationStore(
+      userDefaults: defaults,
+      keychainStore: keychainStore
+    )
+    try configurationStore.save(
+      endpointText: endpoint.importURL.absoluteString,
+      bearerToken: "token"
+    )
+
+    let range = try VitalsTestFixture.previousFullWeek()
+    let requestedAt = try VitalsTestFixture.date("2026-06-25T08:00:00+01:00")
+    let completedAt = try VitalsTestFixture.date("2026-06-25T09:00:00+01:00")
+    let recordID = UUID()
+    let queued = ExportRecord(
+      id: recordID,
+      range: range,
+      mode: .shortcut,
+      metrics: [.steps],
+      status: .queued,
+      destinationHost: endpoint.host,
+      endpointURLString: endpoint.importURL.absoluteString,
+      requestedAt: requestedAt,
+      startedAt: requestedAt,
+      completedAt: nil,
+      attemptCount: 1,
+      counts: .empty,
+      retrySourceID: nil,
+      payloadFileName: nil,
+      errorMessage: deferredMessage,
+      errorCode: "HKError",
+      httpStatus: nil,
+      serverResponseSummary: nil
+    )
+    let payload = try VitalsTestFixture.payload()
+    let response = try XCTUnwrap(
+      HTTPURLResponse(
+        url: endpoint.importURL,
+        statusCode: 201,
+        httpVersion: nil,
+        headerFields: nil)
+    )
+    let store = MockExportHistoryStore(records: [queued])
+    let coordinator = ExportCoordinator(
+      configurationStore: configurationStore,
+      exportService: MockHealthExportService { requestedRange, requestedMetrics in
+        XCTAssertEqual(requestedRange, range)
+        XCTAssertEqual(requestedMetrics, [.steps])
+        return payload
+      },
+      client: HemWebClient(session: MockHTTPSession(data: Data(), response: response)),
+      historyStore: store,
+      now: { completedAt }
+    )
+
+    await coordinator.drainQueue()
+
+    XCTAssertEqual(store.records.count, 1)
+    let record = try XCTUnwrap(store.records.first)
+    XCTAssertEqual(record.id, recordID)
+    XCTAssertEqual(record.mode, .shortcut)
+    XCTAssertEqual(record.status, .succeeded)
+    XCTAssertEqual(record.attemptCount, 2)
+    XCTAssertEqual(record.counts, ExportCounts(payload: payload, range: range))
+    XCTAssertEqual(record.completedAt, completedAt)
+    XCTAssertNil(record.errorMessage)
+    XCTAssertNil(record.errorCode)
+    XCTAssertNil(record.payloadFileName)
+    XCTAssertEqual(record.httpStatus, 201)
+  }
+
   func testDeleteRecordRemovesRecordAndQueuedPayload() throws {
     let queued = try record(
       requestedAt: VitalsTestFixture.date("2026-06-25T12:00:00+01:00"),
@@ -326,6 +466,17 @@ private final class MockExportHistoryStore: ExportHistoryStoring {
 
   func deleteAll() throws {
     records = []
+  }
+}
+
+private struct MockHealthExportService: HealthExportServicing {
+  let makePayloadHandler: (WeekRange, Set<ExportMetricCategory>) async throws -> ExportPayload
+
+  func makePayload(
+    for range: WeekRange,
+    including metrics: Set<ExportMetricCategory>
+  ) async throws -> ExportPayload {
+    try await makePayloadHandler(range, metrics)
   }
 }
 
