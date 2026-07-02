@@ -11,7 +11,7 @@ struct ExportHealthToHemWebIntent: AppIntent {
       let summary = try await HealthExportRunner().exportSelectedDateRange()
       return .result(dialog: "\(summary.intentDialog)")
     } catch {
-      return .result(dialog: "\(ExportErrorPresentation.message(for: error))")
+      throw ExportShortcutError.failed(ExportErrorPresentation.message(for: error))
     }
   }
 }
@@ -27,7 +27,18 @@ struct ExportPreviousDayHealthToHemWebIntent: AppIntent {
       let summary = try await HealthExportRunner().exportPreviousDay()
       return .result(dialog: "\(summary.intentDialog)")
     } catch {
-      return .result(dialog: "\(ExportErrorPresentation.message(for: error))")
+      throw ExportShortcutError.failed(ExportErrorPresentation.message(for: error))
+    }
+  }
+}
+
+private enum ExportShortcutError: LocalizedError {
+  case failed(String)
+
+  var errorDescription: String? {
+    switch self {
+    case .failed(let message):
+      message
     }
   }
 }

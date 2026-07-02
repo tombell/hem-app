@@ -121,7 +121,14 @@ struct ExportCoordinator {
     mode: ExportMode = .manual,
     metrics: Set<ExportMetricCategory>
   ) async throws -> ExportSummary {
-    let draft = try await prepare(range: range, mode: mode, metrics: metrics)
+    let draft: ExportDraft
+    do {
+      draft = try await prepare(range: range, mode: mode, metrics: metrics)
+    } catch {
+      try? recordPreparationFailure(range: range, mode: mode, metrics: metrics, error: error)
+      throw error
+    }
+
     return try await send(draft)
   }
 
@@ -239,6 +246,49 @@ struct ExportCoordinator {
       httpStatus: nil,
       serverResponseSummary: nil
     )
+  }
+
+  private func recordPreparationFailure(
+    range: WeekRange,
+    mode: ExportMode,
+    metrics: Set<ExportMetricCategory>,
+    error: Error
+  ) throws {
+    let requestedAt = now()
+    let destination = destinationSnapshot()
+    let record = ExportRecord(
+      id: uuid(),
+      range: range,
+      mode: mode,
+      metrics: ordered(metrics),
+      status: .failed,
+      destinationHost: destination.host,
+      endpointURLString: destination.endpointURLString,
+      requestedAt: requestedAt,
+      startedAt: requestedAt,
+      completedAt: requestedAt,
+      attemptCount: 1,
+      counts: .empty,
+      retrySourceID: nil,
+      payloadFileName: nil,
+      errorMessage: ExportErrorPresentation.message(for: error),
+      errorCode: String(describing: type(of: error)),
+      httpStatus: nil,
+      serverResponseSummary: nil
+    )
+
+    var records = try historyStore.loadRecords()
+    records.insert(record, at: 0)
+    try historyStore.saveRecords(records)
+  }
+
+  private func destinationSnapshot() -> (host: String, endpointURLString: String) {
+    let endpointText = configurationStore.loadEndpointText()
+    guard let endpoint = try? HemWebEndpoint(text: endpointText) else {
+      return ("Not configured", endpointText)
+    }
+
+    return (endpoint.host, endpoint.importURL.absoluteString)
   }
 
   private func replace(_ record: ExportRecord, in records: inout [ExportRecord]) throws {

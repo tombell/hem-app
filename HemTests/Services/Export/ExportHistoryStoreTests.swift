@@ -122,6 +122,58 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     XCTAssertEqual(record.httpStatus, 201)
   }
 
+  func testShortcutPreparationFailureAddsHistoryRecord() async throws {
+    let suiteName = UUID().uuidString
+    let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+
+    let keychainStore = KeychainStore(service: "dev.tombell.hem.tests.\(UUID().uuidString)")
+    defer { try? keychainStore.delete(account: "hemWebBearerToken") }
+
+    let endpoint = try HemWebEndpoint(text: "https://hem-web.local")
+    let configurationStore = HemWebConfigurationStore(
+      userDefaults: defaults,
+      keychainStore: keychainStore
+    )
+    try configurationStore.save(
+      endpointText: endpoint.importURL.absoluteString,
+      bearerToken: ""
+    )
+
+    let store = MockExportHistoryStore(records: [])
+    let requestedAt = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let recordID = UUID()
+    let coordinator = ExportCoordinator(
+      configurationStore: configurationStore,
+      historyStore: store,
+      uuid: { recordID },
+      now: { requestedAt }
+    )
+    let range = try VitalsTestFixture.previousFullWeek()
+
+    do {
+      _ = try await coordinator.export(range: range, mode: .shortcut, metrics: [.steps])
+      XCTFail("Expected shortcut export to fail without a bearer token.")
+    } catch {
+      XCTAssertEqual(error as? HemWebClientError, .missingToken)
+    }
+
+    let record = try XCTUnwrap(store.records.first)
+    XCTAssertEqual(record.id, recordID)
+    XCTAssertEqual(record.mode, .shortcut)
+    XCTAssertEqual(record.metrics, [.steps])
+    XCTAssertEqual(record.status, .failed)
+    XCTAssertEqual(record.destinationHost, endpoint.host)
+    XCTAssertEqual(record.endpointURLString, endpoint.importURL.absoluteString)
+    XCTAssertEqual(record.requestedAt, requestedAt)
+    XCTAssertEqual(record.startedAt, requestedAt)
+    XCTAssertEqual(record.completedAt, requestedAt)
+    XCTAssertEqual(record.counts, .empty)
+    XCTAssertEqual(record.errorMessage, HemWebClientError.missingToken.errorDescription)
+    XCTAssertEqual(record.errorCode, "HemWebClientError")
+    XCTAssertNil(record.httpStatus)
+  }
+
   func testDeleteRecordRemovesRecordAndQueuedPayload() throws {
     let queued = try record(
       requestedAt: VitalsTestFixture.date("2026-06-25T12:00:00+01:00"),
