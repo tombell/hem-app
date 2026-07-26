@@ -19,6 +19,10 @@ struct ExportRecord: Codable, Identifiable, Equatable {
   var errorCode: String?
   var httpStatus: Int?
   var serverResponseSummary: String?
+  var serverImportID: Int? = nil
+  var serverImportStatus: HemWebImportStatus? = nil
+  var serverCounts: HemWebImportCounts? = nil
+  var nextRetryAt: Date? = nil
 }
 
 enum ExportStatus: String, Codable, Equatable {
@@ -39,6 +43,7 @@ struct ExportCounts: Codable, Equatable {
   let dayCount: Int
   let dailyMetricCount: Int
   let sampleCount: Int
+  let categorySampleCount: Int
   let workoutCount: Int
   let sleepSampleCount: Int
 
@@ -46,6 +51,7 @@ struct ExportCounts: Codable, Equatable {
     dayCount: 0,
     dailyMetricCount: 0,
     sampleCount: 0,
+    categorySampleCount: 0,
     workoutCount: 0,
     sleepSampleCount: 0
   )
@@ -54,6 +60,7 @@ struct ExportCounts: Codable, Equatable {
     dayCount = range.days().count
     dailyMetricCount = payload.dailyMetrics.count
     sampleCount = payload.samples.count
+    categorySampleCount = payload.categorySamples.count
     workoutCount = payload.workouts.count
     sleepSampleCount = payload.sleep.count
   }
@@ -62,14 +69,26 @@ struct ExportCounts: Codable, Equatable {
     dayCount: Int,
     dailyMetricCount: Int,
     sampleCount: Int,
+    categorySampleCount: Int = 0,
     workoutCount: Int,
     sleepSampleCount: Int
   ) {
     self.dayCount = dayCount
     self.dailyMetricCount = dailyMetricCount
     self.sampleCount = sampleCount
+    self.categorySampleCount = categorySampleCount
     self.workoutCount = workoutCount
     self.sleepSampleCount = sleepSampleCount
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    dayCount = try container.decode(Int.self, forKey: .dayCount)
+    dailyMetricCount = try container.decode(Int.self, forKey: .dailyMetricCount)
+    sampleCount = try container.decode(Int.self, forKey: .sampleCount)
+    categorySampleCount = try container.decodeIfPresent(Int.self, forKey: .categorySampleCount) ?? 0
+    workoutCount = try container.decode(Int.self, forKey: .workoutCount)
+    sleepSampleCount = try container.decode(Int.self, forKey: .sleepSampleCount)
   }
 }
 

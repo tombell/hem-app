@@ -17,6 +17,10 @@ struct HealthExportService {
     self.sourceProvider = sourceProvider
   }
 
+  static func identifier(for sample: HKSample) -> String {
+    sample.uuid.uuidString
+  }
+
   func makePayload(
     for range: WeekRange,
     including metrics: Set<ExportMetricCategory> = Set(ExportMetricCategory.allCases)
@@ -159,7 +163,7 @@ struct HealthExportService {
     let samples: [HKQuantitySample] = try await samples(of: quantityType, range: range)
     return samples.map { sample in
       ExportPayload.HealthSample(
-        id: sample.uuid.uuidString,
+        id: Self.identifier(for: sample),
         type: metric.type,
         start: sample.startDate,
         end: sample.endDate,
@@ -194,7 +198,7 @@ struct HealthExportService {
     let samples: [HKCategorySample] = try await samples(of: categoryType, range: range)
     return samples.map { sample in
       ExportPayload.CategorySample(
-        id: sample.uuid.uuidString,
+        id: Self.identifier(for: sample),
         type: metric.type,
         start: sample.startDate,
         end: sample.endDate,
@@ -250,7 +254,7 @@ struct HealthExportService {
     let samples: [HKCategorySample] = try await samples(of: sleepType, range: range)
     return samples.map { sample in
       ExportPayload.SleepSample(
-        id: sample.uuid.uuidString,
+        id: Self.identifier(for: sample),
         start: sample.startDate,
         end: sample.endDate,
         value: HKCategoryValueSleepAnalysis(rawValue: sample.value)?.exportName

@@ -207,6 +207,28 @@ private struct ExportHistoryRow: View {
         .font(.footnote)
         .foregroundStyle(.secondary)
 
+      if let serverImportStatus = record.serverImportStatus {
+        Text(
+          "Server \(serverImportStatus.rawValue) import \(record.serverImportID.map(String.init) ?? "—")"
+        )
+        .font(.caption)
+        .foregroundStyle(.secondary)
+      }
+
+      Text(
+        "Local: \(record.counts.dailyMetricCount) daily, \(record.counts.sampleCount) samples, \(record.counts.categorySampleCount) category, \(record.counts.workoutCount) workouts, \(record.counts.sleepSampleCount) sleep"
+      )
+      .font(.caption)
+      .foregroundStyle(.secondary)
+
+      if let counts = record.serverCounts {
+        Text(
+          "Server facts: \(counts.dailyMetrics) daily, \(counts.samples) samples, \(counts.categorySamples) category, \(counts.workouts) workouts, \(counts.sleep) sleep"
+        )
+        .font(.caption)
+        .foregroundStyle(.secondary)
+      }
+
       if let errorMessage = record.errorMessage,
         record.status == .failed || record.status == .queued
       {

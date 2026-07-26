@@ -87,8 +87,33 @@ struct ExportSummary: Equatable {
   let destinationHost: String
   let dailyMetricCount: Int
   let sampleCount: Int
+  let categorySampleCount: Int
   let workoutCount: Int
   let sleepSampleCount: Int
+  let serverImportStatus: HemWebImportStatus?
+  let serverCounts: HemWebImportCounts?
+
+  init(
+    range: WeekRange,
+    destinationHost: String,
+    dailyMetricCount: Int,
+    sampleCount: Int,
+    categorySampleCount: Int = 0,
+    workoutCount: Int,
+    sleepSampleCount: Int,
+    serverImportStatus: HemWebImportStatus? = nil,
+    serverCounts: HemWebImportCounts? = nil
+  ) {
+    self.range = range
+    self.destinationHost = destinationHost
+    self.dailyMetricCount = dailyMetricCount
+    self.sampleCount = sampleCount
+    self.categorySampleCount = categorySampleCount
+    self.workoutCount = workoutCount
+    self.sleepSampleCount = sleepSampleCount
+    self.serverImportStatus = serverImportStatus
+    self.serverCounts = serverCounts
+  }
 
   var intentDialog: String {
     "Exported Health data for \(range.displayLabel)."

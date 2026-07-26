@@ -24,6 +24,7 @@ struct ExportPreviewSheet: View {
         Section("Records") {
           LabeledContent("Daily rows", value: "\(draft.counts.dailyMetricCount)")
           LabeledContent("Samples", value: "\(draft.counts.sampleCount)")
+          LabeledContent("Category samples", value: "\(draft.counts.categorySampleCount)")
           LabeledContent("Workouts", value: "\(draft.counts.workoutCount)")
           LabeledContent("Sleep", value: "\(draft.counts.sleepSampleCount)")
         }

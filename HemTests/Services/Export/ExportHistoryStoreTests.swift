@@ -30,6 +30,28 @@ final class ExportHistoryStoreTests: XCTestCase {
     XCTAssertEqual(try store.loadRecords().map(\.id), [newer.id, older.id])
   }
 
+  func testLegacyRecordWithoutCategoryOrServerFieldsStillDecodes() throws {
+    let record = try record(requestedAt: VitalsTestFixture.date("2026-06-24T12:00:00+01:00"))
+    let encoded = try JSONEncoder.exportStore.encode([record])
+    var records = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [[String: Any]])
+    var counts = try XCTUnwrap(records[0]["counts"] as? [String: Any])
+    counts.removeValue(forKey: "categorySampleCount")
+    records[0]["counts"] = counts
+    records[0].removeValue(forKey: "serverImportID")
+    records[0].removeValue(forKey: "serverImportStatus")
+    records[0].removeValue(forKey: "serverCounts")
+    records[0].removeValue(forKey: "nextRetryAt")
+
+    let data = try JSONSerialization.data(withJSONObject: records)
+    let decoded = try JSONDecoder.exportStore.decode([ExportRecord].self, from: data)
+
+    XCTAssertEqual(decoded.first?.counts.categorySampleCount, 0)
+    XCTAssertNil(decoded.first?.serverImportID)
+    XCTAssertNil(decoded.first?.serverImportStatus)
+    XCTAssertNil(decoded.first?.serverCounts)
+    XCTAssertNil(decoded.first?.nextRetryAt)
+  }
+
   func testQueuedPayloadRoundTripAndDelete() throws {
     let store = ExportHistoryStore(baseURL: temporaryDirectory)
     let payload = try VitalsTestFixture.payload()
@@ -96,7 +118,8 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     let recordID = UUID()
     let coordinator = ExportCoordinator(
       configurationStore: configurationStore,
-      client: HemWebClient(session: MockHTTPSession(data: Data(), response: response)),
+      client: HemWebClient(
+        session: MockHTTPSession(data: Self.createdResponse, response: response)),
       historyStore: store,
       uuid: { recordID },
       now: { requestedAt }
@@ -121,6 +144,9 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     XCTAssertEqual(record.mode, .shortcut)
     XCTAssertEqual(record.status, .succeeded)
     XCTAssertEqual(record.httpStatus, 201)
+    XCTAssertEqual(record.serverImportID, 42)
+    XCTAssertEqual(record.serverImportStatus, .created)
+    XCTAssertEqual(record.serverCounts?.categorySamples, 2)
   }
 
   func testShortcutPreparationFailureAddsHistoryRecord() async throws {
@@ -293,7 +319,8 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
         XCTAssertEqual(requestedMetrics, [.steps])
         return payload
       },
-      client: HemWebClient(session: MockHTTPSession(data: Data(), response: response)),
+      client: HemWebClient(
+        session: MockHTTPSession(data: Self.createdResponse, response: response)),
       historyStore: store,
       now: { completedAt }
     )
@@ -312,6 +339,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     XCTAssertNil(record.errorCode)
     XCTAssertNil(record.payloadFileName)
     XCTAssertEqual(record.httpStatus, 201)
+    XCTAssertEqual(record.serverImportStatus, .created)
   }
 
   func testDeleteRecordRemovesRecordAndQueuedPayload() throws {
@@ -338,7 +366,173 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     }
   }
 
-  private func record(requestedAt: Date, payloadFileName: String? = nil) throws -> ExportRecord {
+  func testRateLimitedManualExportQueuesPayloadUntilRetryDate() async throws {
+    let (configurationStore, endpoint) = try configuredStore()
+    let response = try XCTUnwrap(
+      HTTPURLResponse(
+        url: endpoint.importURL,
+        statusCode: 429,
+        httpVersion: nil,
+        headerFields: ["Retry-After": "120"])
+    )
+    let now = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let store = MockExportHistoryStore(records: [])
+    let coordinator = ExportCoordinator(
+      configurationStore: configurationStore,
+      client: HemWebClient(
+        session: MockHTTPSession(
+          data: Self.errorResponse(category: "rate_limit", message: "Rate limit exceeded"),
+          response: response
+        ),
+        now: { now }
+      ),
+      historyStore: store,
+      now: { now }
+    )
+    let range = try VitalsTestFixture.previousFullWeek()
+    let payload = try VitalsTestFixture.payload()
+    let draft = ExportDraft(
+      range: range,
+      mode: .manual,
+      metrics: [.steps],
+      destinationHost: endpoint.host,
+      endpointURLString: endpoint.importURL.absoluteString,
+      payload: payload,
+      counts: ExportCounts(payload: payload, range: range),
+      warnings: []
+    )
+
+    do {
+      _ = try await coordinator.send(draft)
+      XCTFail("Expected rate-limited export to be queued.")
+    } catch {
+      XCTAssertEqual((error as? HemWebClientError)?.statusCode, 429)
+    }
+
+    let record = try XCTUnwrap(store.records.first)
+    XCTAssertEqual(record.status, .queued)
+    XCTAssertEqual(record.httpStatus, 429)
+    XCTAssertEqual(record.nextRetryAt, now.addingTimeInterval(120))
+    XCTAssertNotNil(record.payloadFileName)
+    XCTAssertEqual(store.payloads.count, 1)
+  }
+
+  func testUnauthorizedManualExportFailsWithoutQueueingPayload() async throws {
+    let (configurationStore, endpoint) = try configuredStore()
+    let response = try XCTUnwrap(
+      HTTPURLResponse(
+        url: endpoint.importURL,
+        statusCode: 401,
+        httpVersion: nil,
+        headerFields: nil)
+    )
+    let store = MockExportHistoryStore(records: [])
+    let coordinator = ExportCoordinator(
+      configurationStore: configurationStore,
+      client: HemWebClient(
+        session: MockHTTPSession(
+          data: Self.errorResponse(category: "auth", message: "Unauthorized"),
+          response: response
+        )
+      ),
+      historyStore: store
+    )
+    let range = try VitalsTestFixture.previousFullWeek()
+    let payload = try VitalsTestFixture.payload()
+    let draft = ExportDraft(
+      range: range,
+      mode: .manual,
+      metrics: [.steps],
+      destinationHost: endpoint.host,
+      endpointURLString: endpoint.importURL.absoluteString,
+      payload: payload,
+      counts: ExportCounts(payload: payload, range: range),
+      warnings: []
+    )
+
+    do {
+      _ = try await coordinator.send(draft)
+      XCTFail("Expected unauthorized export to fail.")
+    } catch {
+      XCTAssertEqual((error as? HemWebClientError)?.statusCode, 401)
+    }
+
+    let record = try XCTUnwrap(store.records.first)
+    XCTAssertEqual(record.status, .failed)
+    XCTAssertEqual(record.httpStatus, 401)
+    XCTAssertNil(record.payloadFileName)
+    XCTAssertTrue(store.payloads.isEmpty)
+  }
+
+  func testDrainSkipsRateLimitedRecordBeforeRetryDate() async throws {
+    let now = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let queued = try record(
+      requestedAt: now,
+      payloadFileName: "queued.json",
+      nextRetryAt: now.addingTimeInterval(120)
+    )
+    let store = MockExportHistoryStore(
+      records: [queued],
+      payloads: ["queued.json": try VitalsTestFixture.payload()]
+    )
+    let coordinator = ExportCoordinator(historyStore: store, now: { now })
+
+    await coordinator.drainQueue()
+
+    XCTAssertEqual(store.records.first?.status, .queued)
+    XCTAssertEqual(store.records.first?.attemptCount, 1)
+    XCTAssertEqual(store.payloads.count, 1)
+  }
+
+  func testQueuedServerFailureRemainsQueuedForRetry() async throws {
+    let (configurationStore, endpoint) = try configuredStore()
+    let now = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let queued = try record(
+      requestedAt: now,
+      payloadFileName: "queued.json"
+    )
+    let response = try XCTUnwrap(
+      HTTPURLResponse(
+        url: endpoint.importURL,
+        statusCode: 500,
+        httpVersion: nil,
+        headerFields: nil)
+    )
+    let store = MockExportHistoryStore(
+      records: [queued],
+      payloads: ["queued.json": try VitalsTestFixture.payload()]
+    )
+    let coordinator = ExportCoordinator(
+      configurationStore: configurationStore,
+      client: HemWebClient(
+        session: MockHTTPSession(
+          data: Self.errorResponse(category: "server_error", message: "Import failed"),
+          response: response
+        )
+      ),
+      historyStore: store,
+      now: { now }
+    )
+
+    do {
+      _ = try await coordinator.retry(recordID: queued.id)
+      XCTFail("Expected queued retry to fail.")
+    } catch {
+      XCTAssertEqual((error as? HemWebClientError)?.statusCode, 500)
+    }
+
+    let record = try XCTUnwrap(store.records.first)
+    XCTAssertEqual(record.status, .queued)
+    XCTAssertEqual(record.attemptCount, 2)
+    XCTAssertEqual(record.httpStatus, 500)
+    XCTAssertEqual(record.payloadFileName, "queued.json")
+  }
+
+  private func record(
+    requestedAt: Date,
+    payloadFileName: String? = nil,
+    nextRetryAt: Date? = nil
+  ) throws -> ExportRecord {
     ExportRecord(
       id: UUID(),
       range: try VitalsTestFixture.previousFullWeek(),
@@ -357,8 +551,48 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
       errorMessage: nil,
       errorCode: nil,
       httpStatus: payloadFileName == nil ? 201 : nil,
-      serverResponseSummary: nil
+      serverResponseSummary: nil,
+      nextRetryAt: nextRetryAt
     )
+  }
+
+  private func configuredStore() throws -> (HemWebConfigurationStore, HemWebEndpoint) {
+    let defaults = try XCTUnwrap(UserDefaults(suiteName: UUID().uuidString))
+    let endpoint = try HemWebEndpoint(text: "https://hem-web.local")
+    let store = HemWebConfigurationStore(
+      userDefaults: defaults,
+      keychainStore: KeychainStore(service: "dev.tombell.hem.tests.\(UUID().uuidString)")
+    )
+    try store.save(
+      endpointText: endpoint.importURL.absoluteString,
+      bearerToken: "token"
+    )
+    return (store, endpoint)
+  }
+
+  private static func errorResponse(category: String, message: String) -> Data {
+    Data(
+      """
+      {"ok":false,"error":{"category":"\(category)","message":"\(message)"}}
+      """.utf8)
+  }
+
+  private static var createdResponse: Data {
+    Data(
+      """
+      {
+        "ok": true,
+        "importId": 42,
+        "status": "created",
+        "counts": {
+          "categorySamples": 2,
+          "dailyMetrics": 4,
+          "samples": 1,
+          "sleep": 1,
+          "workouts": 1
+        }
+      }
+      """.utf8)
   }
 }
 
@@ -440,10 +674,12 @@ final class ExportDateRangeStoreTests: XCTestCase {
 
 private final class MockExportHistoryStore: ExportHistoryStoring {
   var records: [ExportRecord]
+  var payloads: [String: ExportPayload]
   var deletedPayloads: [String] = []
 
-  init(records: [ExportRecord]) {
+  init(records: [ExportRecord], payloads: [String: ExportPayload] = [:]) {
     self.records = records
+    self.payloads = payloads
   }
 
   func loadRecords() throws -> [ExportRecord] {
@@ -454,18 +690,25 @@ private final class MockExportHistoryStore: ExportHistoryStoring {
     self.records = records
   }
 
-  func savePayload(_ payload: ExportPayload, named fileName: String) throws {}
+  func savePayload(_ payload: ExportPayload, named fileName: String) throws {
+    payloads[fileName] = payload
+  }
 
   func loadPayload(named fileName: String) throws -> ExportPayload {
-    throw ExportCoordinatorError.recordNotFound
+    guard let payload = payloads[fileName] else {
+      throw ExportCoordinatorError.recordNotFound
+    }
+    return payload
   }
 
   func deletePayload(named fileName: String) throws {
     deletedPayloads.append(fileName)
+    payloads.removeValue(forKey: fileName)
   }
 
   func deleteAll() throws {
     records = []
+    payloads = [:]
   }
 }
 

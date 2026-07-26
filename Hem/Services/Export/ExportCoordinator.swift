@@ -85,14 +85,17 @@ struct ExportCoordinator {
       )
       record.status = .succeeded
       record.completedAt = now()
-      record.httpStatus = responseSummary.statusCode
-      record.serverResponseSummary = responseSummary.bodySummary
+      apply(responseSummary, to: &record)
       record.errorMessage = nil
+      record.errorCode = nil
+      record.nextRetryAt = nil
       checkpointStore.saveLastSuccessEnd(draft.range.end)
     } catch {
       record.completedAt = now()
       record.errorMessage = ExportErrorPresentation.message(for: error)
       record.errorCode = errorCode(for: error)
+      record.httpStatus = (error as? HemWebClientError)?.statusCode
+      record.nextRetryAt = nextRetryDate(for: error)
 
       if shouldQueue(error) {
         let payloadFileName = "\(record.id.uuidString).json"
@@ -115,8 +118,11 @@ struct ExportCoordinator {
       destinationHost: draft.destinationHost,
       dailyMetricCount: draft.counts.dailyMetricCount,
       sampleCount: draft.counts.sampleCount,
+      categorySampleCount: draft.counts.categorySampleCount,
       workoutCount: draft.counts.workoutCount,
-      sleepSampleCount: draft.counts.sleepSampleCount
+      sleepSampleCount: draft.counts.sleepSampleCount,
+      serverImportStatus: record.serverImportStatus,
+      serverCounts: record.serverCounts
     )
   }
 
@@ -215,7 +221,8 @@ struct ExportCoordinator {
       return
     }
 
-    for record in records.reversed() where record.status == .queued {
+    for record in records.reversed()
+    where record.status == .queued && (record.nextRetryAt == nil || record.nextRetryAt! <= now()) {
       _ = try? await completeQueuedRecord(recordID: record.id)
     }
   }
@@ -236,11 +243,14 @@ struct ExportCoordinator {
       "Requested: \(record.requestedAt)",
       "Completed: \(record.completedAt.map(String.init(describing:)) ?? "Not completed")",
       "Attempts: \(record.attemptCount)",
-      "Counts: days \(record.counts.dayCount), daily \(record.counts.dailyMetricCount), samples \(record.counts.sampleCount), workouts \(record.counts.workoutCount), sleep \(record.counts.sleepSampleCount)",
+      "Local Counts: days \(record.counts.dayCount), daily rows \(record.counts.dailyMetricCount), samples \(record.counts.sampleCount), category samples \(record.counts.categorySampleCount), workouts \(record.counts.workoutCount), sleep \(record.counts.sleepSampleCount)",
       "Error: \(record.errorMessage ?? "None")",
       "Error Code: \(record.errorCode ?? "None")",
       "HTTP Status: \(record.httpStatus.map(String.init) ?? "None")",
-      "Server Response: \(record.serverResponseSummary ?? "None")",
+      "Server Import ID: \(record.serverImportID.map(String.init) ?? "None")",
+      "Server Import Status: \(record.serverImportStatus?.rawValue ?? "None")",
+      "Server Counts: \(serverCountsDescription(record.serverCounts))",
+      "Next Retry: \(record.nextRetryAt.map(String.init(describing:)) ?? "None")",
     ]
 
     return ExportDiagnosticsBundle(text: lines.joined(separator: "\n"))
@@ -372,6 +382,10 @@ struct ExportCoordinator {
     record.errorCode = nil
     record.httpStatus = nil
     record.serverResponseSummary = nil
+    record.serverImportID = nil
+    record.serverImportStatus = nil
+    record.serverCounts = nil
+    record.nextRetryAt = nil
     try replace(record, in: &records)
     try historyStore.saveRecords(records)
 
@@ -383,10 +397,10 @@ struct ExportCoordinator {
       )
       record.status = .succeeded
       record.completedAt = now()
-      record.httpStatus = responseSummary.statusCode
-      record.serverResponseSummary = responseSummary.bodySummary
+      apply(responseSummary, to: &record)
       record.errorMessage = nil
       record.errorCode = nil
+      record.nextRetryAt = nil
       record.payloadFileName = nil
       checkpointStore.saveLastSuccessEnd(draft.range.end)
       if let queuedPayloadFileName {
@@ -396,6 +410,8 @@ struct ExportCoordinator {
       record.completedAt = now()
       record.errorMessage = ExportErrorPresentation.message(for: error)
       record.errorCode = errorCode(for: error)
+      record.httpStatus = (error as? HemWebClientError)?.statusCode
+      record.nextRetryAt = nextRetryDate(for: error)
 
       if shouldQueue(error) {
         if record.payloadFileName == nil {
@@ -422,8 +438,11 @@ struct ExportCoordinator {
       destinationHost: draft.destinationHost,
       dailyMetricCount: draft.counts.dailyMetricCount,
       sampleCount: draft.counts.sampleCount,
+      categorySampleCount: draft.counts.categorySampleCount,
       workoutCount: draft.counts.workoutCount,
-      sleepSampleCount: draft.counts.sleepSampleCount
+      sleepSampleCount: draft.counts.sleepSampleCount,
+      serverImportStatus: record.serverImportStatus,
+      serverCounts: record.serverCounts
     )
   }
 
@@ -513,7 +532,36 @@ struct ExportCoordinator {
       }
     }
 
+    if let clientError = error as? HemWebClientError,
+      let statusCode = clientError.statusCode
+    {
+      return statusCode == 429 || (500..<600).contains(statusCode)
+    }
+
     return false
+  }
+
+  private func apply(_ response: HemWebResponseSummary, to record: inout ExportRecord) {
+    record.httpStatus = response.statusCode
+    record.serverResponseSummary = nil
+    record.serverImportID = response.importResult?.importId
+    record.serverImportStatus = response.importResult?.status
+    record.serverCounts = response.importResult?.counts
+  }
+
+  private func nextRetryDate(for error: Error) -> Date? {
+    guard let retryAfter = (error as? HemWebClientError)?.retryAfter else {
+      return nil
+    }
+    return now().addingTimeInterval(retryAfter)
+  }
+
+  private func serverCountsDescription(_ counts: HemWebImportCounts?) -> String {
+    guard let counts else {
+      return "None"
+    }
+    return
+      "daily facts \(counts.dailyMetrics), samples \(counts.samples), category samples \(counts.categorySamples), workouts \(counts.workouts), sleep \(counts.sleep)"
   }
 
   private func shouldDeferPreparationFailure(_ error: Error, mode: ExportMode) -> Bool {

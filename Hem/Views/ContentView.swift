@@ -277,8 +277,7 @@ struct ContentView: View {
 
     do {
       let summary = try await exportCoordinator.send(preparedDraft)
-      lastResult = .success(
-        "Exported \(summary.range.displayLabel) to \(summary.destinationHost)")
+      lastResult = .success(successMessage(for: summary))
       self.preparedDraft = nil
       refreshRecords()
     } catch {
@@ -294,8 +293,7 @@ struct ContentView: View {
     do {
       try configurationStore.save(endpointText: endpointText, bearerToken: bearerToken)
       let summary = try await exportCoordinator.exportSinceLastSuccess(metrics: selectedMetrics)
-      lastResult = .success(
-        "Exported \(summary.range.displayLabel) to \(summary.destinationHost)")
+      lastResult = .success(successMessage(for: summary))
       refreshRecords()
     } catch {
       lastResult = .failure(ExportErrorPresentation.message(for: error))
@@ -309,8 +307,7 @@ struct ContentView: View {
 
     do {
       let summary = try await exportCoordinator.retry(recordID: recordID)
-      lastResult = .success(
-        "Exported \(summary.range.displayLabel) to \(summary.destinationHost)")
+      lastResult = .success(successMessage(for: summary))
       refreshRecords()
     } catch {
       lastResult = .failure(ExportErrorPresentation.message(for: error))
@@ -330,6 +327,12 @@ struct ContentView: View {
     } catch {
       lastResult = .failure(ExportErrorPresentation.message(for: error))
     }
+  }
+
+  private func successMessage(for summary: ExportSummary) -> String {
+    let status = summary.serverImportStatus?.rawValue ?? "accepted"
+    return
+      "Hem Web \(status) the \(summary.range.displayLabel) export from \(summary.destinationHost)"
   }
 }
 

@@ -1,3 +1,4 @@
+import HealthKit
 import XCTest
 
 @testable import Hem
@@ -144,6 +145,23 @@ final class ExportPayloadTests: XCTestCase {
     XCTAssertNil(payload.samples.first?.id)
     XCTAssertNil(payload.categorySamples.first?.id)
     XCTAssertNil(payload.sleep.first?.id)
+  }
+
+  func testHealthKitUUIDRemainsStableAcrossOverlappingExports() throws {
+    let type = try XCTUnwrap(HKQuantityType.quantityType(forIdentifier: .bodyMass))
+    let start = try VitalsTestFixture.date("2026-06-15T08:00:00+01:00")
+    let sample = HKQuantitySample(
+      type: type,
+      quantity: HKQuantity(unit: .gramUnit(with: .kilo), doubleValue: 75),
+      start: start,
+      end: start.addingTimeInterval(60)
+    )
+
+    let firstExportID = HealthExportService.identifier(for: sample)
+    let overlappingExportID = HealthExportService.identifier(for: sample)
+
+    XCTAssertEqual(firstExportID, sample.uuid.uuidString)
+    XCTAssertEqual(overlappingExportID, firstExportID)
   }
 }
 
