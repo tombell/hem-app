@@ -98,6 +98,32 @@ final class HemWebClientTests: XCTestCase {
     }
   }
 
+  func testCheckedInImportResponseFixturesMatchClientModels() async throws {
+    let endpoint = try HemWebEndpoint(text: "https://hem-web.local")
+    let cases: [(String, Int, HemWebImportStatus)] = [
+      ("import-created.json", 201, .created),
+      ("import-duplicate.json", 200, .duplicate),
+      ("import-replaced.json", 200, .replaced),
+    ]
+
+    for (fileName, statusCode, expectedStatus) in cases {
+      let session = try session(
+        endpoint: endpoint,
+        statusCode: statusCode,
+        data: try fixture(named: fileName)
+      )
+
+      let summary = try await HemWebClient(session: session).post(
+        payload: VitalsTestFixture.payload(),
+        endpoint: endpoint,
+        bearerToken: "token"
+      )
+
+      XCTAssertEqual(summary.importResult?.status, expectedStatus)
+      XCTAssertEqual(summary.importResult?.counts.categorySamples, 2)
+    }
+  }
+
   func testPostRejectsMalformedSuccessfulResponse() async throws {
     let endpoint = try HemWebEndpoint(text: "https://hem-web.local")
     let session = try session(endpoint: endpoint, statusCode: 200, body: #"{"ok":true}"#)
@@ -258,8 +284,22 @@ final class HemWebClientTests: XCTestCase {
     body: String,
     headers: [String: String]? = nil
   ) throws -> MockHTTPSession {
-    MockHTTPSession(
+    try session(
+      endpoint: endpoint,
+      statusCode: statusCode,
       data: Data(body.utf8),
+      headers: headers
+    )
+  }
+
+  private func session(
+    endpoint: HemWebEndpoint,
+    statusCode: Int,
+    data: Data,
+    headers: [String: String]? = nil
+  ) throws -> MockHTTPSession {
+    MockHTTPSession(
+      data: data,
       response: try XCTUnwrap(
         HTTPURLResponse(
           url: endpoint.importURL,
@@ -267,6 +307,19 @@ final class HemWebClientTests: XCTestCase {
           httpVersion: nil,
           headerFields: headers)
       )
+    )
+  }
+
+  private func fixture(named fileName: String) throws -> Data {
+    let testsDirectory = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+    return try Data(
+      contentsOf:
+        testsDirectory
+        .appendingPathComponent("Fixtures/HemWeb")
+        .appendingPathComponent(fileName)
     )
   }
 }

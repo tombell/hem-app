@@ -163,6 +163,89 @@ final class ExportPayloadTests: XCTestCase {
     XCTAssertEqual(firstExportID, sample.uuid.uuidString)
     XCTAssertEqual(overlappingExportID, firstExportID)
   }
+
+  func testPayloadEncodingUsesStrictRFC3339OffsetsAndCalendarDates() throws {
+    let range = WeekRange(
+      start: try VitalsTestFixture.date("2026-03-29T00:00:00+00:00"),
+      end: try VitalsTestFixture.date("2026-03-30T00:00:00+01:00"),
+      calendar: .vitalsDefault,
+      kind: "custom"
+    )
+    let payload = ExportPayload(
+      source: VitalsTestFixture.source,
+      generatedAt: try VitalsTestFixture.date("2026-03-29T12:00:00+01:00"),
+      range: ExportPayload.RangeMetadata(weekRange: range),
+      dailyMetrics: [
+        .init(
+          date: "2026-03-29",
+          steps: .init(value: 1000, unit: "count"),
+          activeEnergy: nil,
+          basalEnergy: nil,
+          exerciseTime: nil,
+          walkingRunningDistance: nil,
+          cyclingDistance: nil,
+          swimmingDistance: nil,
+          swimmingStrokeCount: nil,
+          flightsClimbed: nil)
+      ],
+      samples: [],
+      workouts: [],
+      sleep: []
+    )
+
+    let object = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: ExportPayloadEncoding.encode(payload))
+        as? [String: Any])
+    let encodedRange = try XCTUnwrap(object["range"] as? [String: Any])
+    let dailyMetrics = try XCTUnwrap(object["dailyMetrics"] as? [[String: Any]])
+    let rfc3339Pattern =
+      #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})$"#
+
+    XCTAssertEqual(encodedRange["start"] as? String, "2026-03-29T00:00:00Z")
+    XCTAssertEqual(encodedRange["end"] as? String, "2026-03-30T00:00:00+01:00")
+    XCTAssertNotNil(
+      (object["generatedAt"] as? String)?.range(
+        of: rfc3339Pattern,
+        options: .regularExpression)
+    )
+    XCTAssertEqual(dailyMetrics.first?["date"] as? String, "2026-03-29")
+    XCTAssertNotNil(
+      (dailyMetrics.first?["date"] as? String)?.range(
+        of: #"^\d{4}-\d{2}-\d{2}$"#,
+        options: .regularExpression)
+    )
+  }
+
+  func testSampleContainmentUsesInclusiveRangeBoundaries() throws {
+    let range = WeekRange(
+      start: try VitalsTestFixture.date("2026-06-15T00:00:00+01:00"),
+      end: try VitalsTestFixture.date("2026-06-16T00:00:00+01:00"),
+      calendar: .vitalsDefault,
+      kind: "custom"
+    )
+
+    XCTAssertTrue(
+      HealthExportService.isContained(start: range.start, end: range.end, in: range)
+    )
+    XCTAssertTrue(
+      HealthExportService.isContained(
+        start: range.start.addingTimeInterval(60),
+        end: range.start.addingTimeInterval(60),
+        in: range)
+    )
+    XCTAssertFalse(
+      HealthExportService.isContained(
+        start: range.start.addingTimeInterval(-1),
+        end: range.start.addingTimeInterval(60),
+        in: range)
+    )
+    XCTAssertFalse(
+      HealthExportService.isContained(
+        start: range.end.addingTimeInterval(-60),
+        end: range.end.addingTimeInterval(1),
+        in: range)
+    )
+  }
 }
 
 final class ExportDeviceIdentifierStoreTests: XCTestCase {

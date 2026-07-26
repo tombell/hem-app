@@ -1,0 +1,12 @@
+{
+  "counts": {
+    "categorySamples": 2,
+    "dailyMetrics": 4,
+    "samples": 1,
+    "sleep": 1,
+    "workouts": 1
+  },
+  "importId": 42,
+  "ok": true,
+  "status": "duplicate"
+}

@@ -21,6 +21,10 @@ struct HealthExportService {
     sample.uuid.uuidString
   }
 
+  static func isContained(start: Date, end: Date, in range: WeekRange) -> Bool {
+    start >= range.start && end <= range.end
+  }
+
   func makePayload(
     for range: WeekRange,
     including metrics: Set<ExportMetricCategory> = Set(ExportMetricCategory.allCases)
@@ -222,7 +226,10 @@ struct HealthExportService {
           return
         }
 
-        continuation.resume(returning: (samples as? [Sample]) ?? [])
+        let containedSamples = ((samples as? [Sample]) ?? []).filter {
+          Self.isContained(start: $0.startDate, end: $0.endDate, in: range)
+        }
+        continuation.resume(returning: containedSamples)
       }
 
       healthStore.execute(query)
