@@ -20,6 +20,7 @@ enum VitalsTestFixture {
     ExportPayload.Source(
       app: "Hem",
       bundleIdentifier: "dev.tombell.hem",
+      deviceIdentifier: "00000000-0000-0000-0000-000000000001",
       deviceName: "Test iPhone",
       deviceSystemName: "iOS",
       deviceSystemVersion: "18.0"

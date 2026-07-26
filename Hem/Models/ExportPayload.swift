@@ -38,9 +38,26 @@ extension ExportPayload {
   struct Source: Codable, Equatable {
     let app: String
     let bundleIdentifier: String
+    let deviceIdentifier: String?
     let deviceName: String
     let deviceSystemName: String
     let deviceSystemVersion: String
+
+    init(
+      app: String,
+      bundleIdentifier: String,
+      deviceIdentifier: String? = nil,
+      deviceName: String,
+      deviceSystemName: String,
+      deviceSystemVersion: String
+    ) {
+      self.app = app
+      self.bundleIdentifier = bundleIdentifier
+      self.deviceIdentifier = deviceIdentifier
+      self.deviceName = deviceName
+      self.deviceSystemName = deviceSystemName
+      self.deviceSystemVersion = deviceSystemVersion
+    }
   }
 
   struct RangeMetadata: Codable, Equatable {
@@ -84,18 +101,44 @@ extension ExportPayload {
   }
 
   struct HealthSample: Codable, Equatable {
+    let id: String?
     let type: String
     let start: Date
     let end: Date
     let value: Double
     let unit: String
+
+    init(
+      id: String? = nil,
+      type: String,
+      start: Date,
+      end: Date,
+      value: Double,
+      unit: String
+    ) {
+      self.id = id
+      self.type = type
+      self.start = start
+      self.end = end
+      self.value = value
+      self.unit = unit
+    }
   }
 
   struct CategorySample: Codable, Equatable {
+    let id: String?
     let type: String
     let start: Date
     let end: Date
     let value: String
+
+    init(id: String? = nil, type: String, start: Date, end: Date, value: String) {
+      self.id = id
+      self.type = type
+      self.start = start
+      self.end = end
+      self.value = value
+    }
   }
 
   struct Workout: Codable, Equatable {
@@ -109,9 +152,17 @@ extension ExportPayload {
   }
 
   struct SleepSample: Codable, Equatable {
+    let id: String?
     let start: Date
     let end: Date
     let value: String
+
+    init(id: String? = nil, start: Date, end: Date, value: String) {
+      self.id = id
+      self.start = start
+      self.end = end
+      self.value = value
+    }
   }
 }
 

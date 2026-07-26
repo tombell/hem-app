@@ -10,7 +10,8 @@ struct WeekRange: Codable, Equatable, Sendable {
     let previousDayStart =
       calendar.date(byAdding: .day, value: -1, to: currentDayStart) ?? currentDayStart
 
-    return WeekRange(start: previousDayStart, end: currentDayStart, calendar: calendar, kind: "previousDay")
+    return WeekRange(
+      start: previousDayStart, end: currentDayStart, calendar: calendar, kind: "previousDay")
   }
 
   static func previousFullWeek(now: Date = Date(), calendar: Calendar = .vitalsDefault) -> WeekRange

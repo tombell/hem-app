@@ -30,7 +30,7 @@ struct HealthExportService {
     let categorySamples = try await categorySamples(for: range, including: metrics)
     let workouts = metrics.contains(.workouts) ? try await workouts(for: range) : []
     let sleep = metrics.contains(.sleep) ? try await sleepSamples(for: range) : []
-    let source = await sourceProvider.current()
+    let source = try await sourceProvider.current()
 
     return ExportPayload(
       source: source,
@@ -159,6 +159,7 @@ struct HealthExportService {
     let samples: [HKQuantitySample] = try await samples(of: quantityType, range: range)
     return samples.map { sample in
       ExportPayload.HealthSample(
+        id: sample.uuid.uuidString,
         type: metric.type,
         start: sample.startDate,
         end: sample.endDate,
@@ -193,6 +194,7 @@ struct HealthExportService {
     let samples: [HKCategorySample] = try await samples(of: categoryType, range: range)
     return samples.map { sample in
       ExportPayload.CategorySample(
+        id: sample.uuid.uuidString,
         type: metric.type,
         start: sample.startDate,
         end: sample.endDate,
@@ -248,6 +250,7 @@ struct HealthExportService {
     let samples: [HKCategorySample] = try await samples(of: sleepType, range: range)
     return samples.map { sample in
       ExportPayload.SleepSample(
+        id: sample.uuid.uuidString,
         start: sample.startDate,
         end: sample.endDate,
         value: HKCategoryValueSleepAnalysis(rawValue: sample.value)?.exportName

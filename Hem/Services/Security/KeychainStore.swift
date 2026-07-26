@@ -77,6 +77,13 @@ struct KeychainStore {
   }
 }
 
+protocol KeychainStoring {
+  func read(account: String) throws -> String?
+  func save(_ value: String, account: String) throws
+}
+
+extension KeychainStore: KeychainStoring {}
+
 enum KeychainStoreError: LocalizedError, Equatable {
   case unhandledStatus(OSStatus)
   case invalidStoredValue
