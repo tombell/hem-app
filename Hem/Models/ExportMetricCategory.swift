@@ -15,6 +15,10 @@ enum ExportMetricCategory: String, CaseIterable, Codable, Identifiable, Hashable
   case nutrition
   case mindfulness
   case symptoms
+  case hearing
+  case environment
+  case cycleTracking
+  case hygiene
 
   var id: String {
     rawValue
@@ -50,6 +54,14 @@ enum ExportMetricCategory: String, CaseIterable, Codable, Identifiable, Hashable
       "Mindfulness"
     case .symptoms:
       "Symptoms"
+    case .hearing:
+      "Hearing"
+    case .environment:
+      "Environment"
+    case .cycleTracking:
+      "Cycle Tracking"
+    case .hygiene:
+      "Hygiene"
     }
   }
 
@@ -83,6 +95,14 @@ enum ExportMetricCategory: String, CaseIterable, Codable, Identifiable, Hashable
       "brain.head.profile"
     case .symptoms:
       "cross.case"
+    case .hearing:
+      "ear"
+    case .environment:
+      "sun.max"
+    case .cycleTracking:
+      "drop"
+    case .hygiene:
+      "hands.sparkles"
     }
   }
 
@@ -116,6 +136,14 @@ enum ExportMetricCategory: String, CaseIterable, Codable, Identifiable, Hashable
       .cyan
     case .symptoms:
       .red
+    case .hearing:
+      .blue
+    case .environment:
+      .orange
+    case .cycleTracking:
+      .pink
+    case .hygiene:
+      .teal
     }
   }
 }
