@@ -16,4 +16,17 @@ final class HealthMetricDefinitionsTests: XCTestCase {
     XCTAssertTrue(readTypeIdentifiers.contains(HKCategoryTypeIdentifier.sleepAnalysis.rawValue))
     XCTAssertTrue(readTypeIdentifiers.contains(HKObjectType.workoutType().identifier))
   }
+
+  func testExportMetricDefinitionsAreUnique() {
+    let identifiers =
+      HealthMetricDefinitions.dailyQuantityMetrics.map(\.identifier.rawValue)
+      + HealthMetricDefinitions.sampleQuantityMetrics.map(\.identifier.rawValue)
+      + HealthMetricDefinitions.categoryMetrics.map(\.identifier.rawValue)
+    let types =
+      HealthMetricDefinitions.sampleQuantityMetrics.map(\.type)
+      + HealthMetricDefinitions.categoryMetrics.map(\.type)
+
+    XCTAssertEqual(identifiers.count, Set(identifiers).count)
+    XCTAssertEqual(types.count, Set(types).count)
+  }
 }
