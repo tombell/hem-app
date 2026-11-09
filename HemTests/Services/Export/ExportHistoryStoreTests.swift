@@ -604,6 +604,44 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     XCTAssertEqual(checkpointStore.loadLastSuccessEnd(), now)
   }
 
+  func testPrepareWarnsAboutEachSelectedCategoryWithoutData() async throws {
+    let (configurationStore, _) = try configuredStore()
+    let basePayload = try VitalsTestFixture.payload()
+    let respiratoryRate = ExportPayload.HealthSample(
+      type: "respiratoryRate",
+      start: basePayload.range.start,
+      end: basePayload.range.start,
+      value: 14,
+      unit: "count/min"
+    )
+    let payload = ExportPayload(
+      source: basePayload.source,
+      generatedAt: basePayload.generatedAt,
+      range: basePayload.range,
+      dailyMetrics: [],
+      samples: [respiratoryRate],
+      workouts: [],
+      sleep: []
+    )
+    let coordinator = ExportCoordinator(
+      configurationStore: configurationStore,
+      exportService: MockHealthExportService { _, _ in payload },
+      historyStore: MockExportHistoryStore(records: [])
+    )
+
+    let draft = try await coordinator.prepare(
+      range: try VitalsTestFixture.previousFullWeek(),
+      metrics: [.sleep, .heart, .vitals]
+    )
+
+    XCTAssertEqual(
+      draft.warnings,
+      [
+        "No data found for Heart, Sleep. Data may be missing or Health access may not be granted."
+      ]
+    )
+  }
+
   private func successfulCoordinator(now: Date) throws -> (
     ExportCoordinator, ExportCheckpointStore
   ) {
