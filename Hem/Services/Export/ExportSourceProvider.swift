@@ -1,8 +1,5 @@
 import Foundation
-
-#if canImport(UIKit)
-  import UIKit
-#endif
+import UIKit
 
 struct ExportSourceProvider {
   private let bundle: Bundle
@@ -20,26 +17,15 @@ struct ExportSourceProvider {
   func current() throws -> ExportPayload.Source {
     let deviceIdentifier = try deviceIdentifierStore.identifier()
 
-    #if canImport(UIKit)
-      let device = UIDevice.current
-      return ExportPayload.Source(
-        app: "Hem",
-        bundleIdentifier: bundle.bundleIdentifier ?? "dev.tombell.hem",
-        deviceIdentifier: deviceIdentifier,
-        deviceName: device.name,
-        deviceSystemName: device.systemName,
-        deviceSystemVersion: device.systemVersion
-      )
-    #else
-      return ExportPayload.Source(
-        app: "Hem",
-        bundleIdentifier: bundle.bundleIdentifier ?? "dev.tombell.hem",
-        deviceIdentifier: deviceIdentifier,
-        deviceName: Host.current().localizedName ?? "Unknown",
-        deviceSystemName: "Unknown",
-        deviceSystemVersion: ProcessInfo.processInfo.operatingSystemVersionString
-      )
-    #endif
+    let device = UIDevice.current
+    return ExportPayload.Source(
+      app: "Hem",
+      bundleIdentifier: bundle.bundleIdentifier ?? "dev.tombell.hem",
+      deviceIdentifier: deviceIdentifier,
+      deviceName: device.name,
+      deviceSystemName: device.systemName,
+      deviceSystemVersion: device.systemVersion
+    )
   }
 }
 

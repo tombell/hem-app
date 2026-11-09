@@ -81,8 +81,7 @@ final class ExportHistoryStoreTests: XCTestCase {
       payloadFileName: nil,
       errorMessage: nil,
       errorCode: nil,
-      httpStatus: 201,
-      serverResponseSummary: nil
+      httpStatus: 201
     )
   }
 }
@@ -300,8 +299,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
       payloadFileName: nil,
       errorMessage: deferredMessage,
       errorCode: "HKError",
-      httpStatus: nil,
-      serverResponseSummary: nil
+      httpStatus: nil
     )
     let payload = try VitalsTestFixture.payload()
     let response = try XCTUnwrap(
@@ -741,7 +739,6 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
       errorMessage: nil,
       errorCode: nil,
       httpStatus: payloadFileName == nil ? 201 : nil,
-      serverResponseSummary: nil,
       nextRetryAt: nextRetryAt
     )
   }
@@ -894,11 +891,6 @@ private final class MockExportHistoryStore: ExportHistoryStoring {
   func deletePayload(named fileName: String) throws {
     deletedPayloads.append(fileName)
     payloads.removeValue(forKey: fileName)
-  }
-
-  func deleteAll() throws {
-    records = []
-    payloads = [:]
   }
 }
 

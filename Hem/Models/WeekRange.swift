@@ -2,10 +2,6 @@ import Foundation
 
 struct WeekRange: Codable, Equatable, Sendable {
   static func previousDay(now: Date = Date(), calendar: Calendar = .vitalsDefault) -> WeekRange {
-    var calendar = calendar
-    calendar.firstWeekday = 2
-    calendar.minimumDaysInFirstWeek = 4
-
     let currentDayStart = calendar.startOfDay(for: now)
     let previousDayStart =
       calendar.date(byAdding: .day, value: -1, to: currentDayStart) ?? currentDayStart
@@ -34,10 +30,6 @@ struct WeekRange: Codable, Equatable, Sendable {
   static func custom(
     from startDate: Date, through throughDate: Date, calendar: Calendar = .vitalsDefault
   ) throws -> WeekRange {
-    var calendar = calendar
-    calendar.firstWeekday = 2
-    calendar.minimumDaysInFirstWeek = 4
-
     let start = calendar.startOfDay(for: startDate)
     let through = calendar.startOfDay(for: throughDate)
     guard let end = calendar.date(byAdding: .day, value: 1, to: through),

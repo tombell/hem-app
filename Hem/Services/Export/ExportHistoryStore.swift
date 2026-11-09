@@ -34,13 +34,13 @@ struct ExportHistoryStore: ExportHistoryStoring {
     try ensureDirectories()
     let sortedRecords = records.sorted { $0.requestedAt > $1.requestedAt }
     let data = try JSONEncoder.exportStore.encode(sortedRecords)
-    try writeAtomically(data, to: recordsURL)
+    try data.write(to: recordsURL, options: .atomic)
   }
 
   func savePayload(_ payload: ExportPayload, named fileName: String) throws {
     try ensureDirectories()
     let data = try ExportPayloadEncoding.encode(payload)
-    try writeAtomically(data, to: payloadsURL.appendingPathComponent(fileName))
+    try data.write(to: payloadsURL.appendingPathComponent(fileName), options: .atomic)
   }
 
   func loadPayload(named fileName: String) throws -> ExportPayload {
@@ -57,30 +57,9 @@ struct ExportHistoryStore: ExportHistoryStoring {
     try fileManager.removeItem(at: url)
   }
 
-  func deleteAll() throws {
-    if fileManager.fileExists(atPath: recordsURL.path) {
-      try fileManager.removeItem(at: recordsURL)
-    }
-
-    if fileManager.fileExists(atPath: payloadsURL.path) {
-      try fileManager.removeItem(at: payloadsURL)
-    }
-  }
-
   private func ensureDirectories() throws {
     try fileManager.createDirectory(at: baseURL, withIntermediateDirectories: true)
     try fileManager.createDirectory(at: payloadsURL, withIntermediateDirectories: true)
-  }
-
-  private func writeAtomically(_ data: Data, to url: URL) throws {
-    let temporaryURL = url.deletingLastPathComponent()
-      .appendingPathComponent(".\(url.lastPathComponent).tmp")
-    try data.write(to: temporaryURL, options: .atomic)
-    if fileManager.fileExists(atPath: url.path) {
-      _ = try fileManager.replaceItemAt(url, withItemAt: temporaryURL)
-    } else {
-      try fileManager.moveItem(at: temporaryURL, to: url)
-    }
   }
 }
 
@@ -90,7 +69,6 @@ protocol ExportHistoryStoring {
   func savePayload(_ payload: ExportPayload, named fileName: String) throws
   func loadPayload(named fileName: String) throws -> ExportPayload
   func deletePayload(named fileName: String) throws
-  func deleteAll() throws
 }
 
 extension JSONEncoder {
