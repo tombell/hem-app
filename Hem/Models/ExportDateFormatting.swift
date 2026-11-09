@@ -1,12 +1,15 @@
 import Foundation
 
 enum ExportDateFormatting {
+  // Dates are parsed with ISO8601FormatStyle and formatted with one formatter per encoder:
+  // creating an ISO8601DateFormatter per date dominated encoding and decoding time for
+  // payloads with thousands of samples.
   static var jsonDecoder: JSONDecoder {
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .custom { decoder in
       let container = try decoder.singleValueContainer()
       let string = try container.decode(String.self)
-      guard let date = ISO8601DateFormatter().date(from: string) else {
+      guard let date = try? Date(string, strategy: .iso8601) else {
         throw DecodingError.dataCorruptedError(
           in: container,
           debugDescription: "Invalid ISO 8601 date: \(string)"
@@ -18,20 +21,16 @@ enum ExportDateFormatting {
   }
 
   static func jsonEncoder(timeZone: TimeZone) -> JSONEncoder {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime]
+    formatter.timeZone = timeZone
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.sortedKeys]
     encoder.dateEncodingStrategy = .custom { date, encoder in
       var container = encoder.singleValueContainer()
-      try container.encode(iso8601String(from: date, timeZone: timeZone))
+      try container.encode(formatter.string(from: date))
     }
     return encoder
-  }
-
-  static func iso8601String(from date: Date, timeZone: TimeZone) -> String {
-    let formatter = ISO8601DateFormatter()
-    formatter.formatOptions = [.withInternetDateTime]
-    formatter.timeZone = timeZone
-    return formatter.string(from: date)
   }
 
   static func dayString(for date: Date, calendar: Calendar) -> String {
