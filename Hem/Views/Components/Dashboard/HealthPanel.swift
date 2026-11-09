@@ -1,21 +1,18 @@
 import SwiftUI
 
 struct HealthPanel: View {
-  let healthStatus: HealthAuthorizationService.Status
-  let healthState: ReadinessState
-  let isRequestingHealthAccess: Bool
-  let requestAction: () async -> Void
+  @Environment(AppModel.self) private var model
 
   var body: some View {
     DashboardPanel(title: "Health", systemImage: "heart.text.square", tint: .red) {
       InfoRow(
         title: "Access",
-        value: healthStatus.displayName,
-        systemImage: healthState.systemImage,
-        tint: healthState.tint
+        value: model.healthStatus.displayName,
+        systemImage: model.healthState.systemImage,
+        tint: model.healthState.tint
       )
 
-      Text(healthStatus.detail)
+      Text(model.healthStatus.detail)
         .font(.footnote)
         .foregroundStyle(.secondary)
         .fixedSize(horizontal: false, vertical: true)
@@ -23,8 +20,8 @@ struct HealthPanel: View {
       LoadingActionButton(
         title: "Request Access",
         systemImage: "heart",
-        isLoading: isRequestingHealthAccess,
-        action: requestAction
+        isLoading: model.isRequestingHealthAccess,
+        action: model.requestHealthAccess
       )
       .buttonStyle(.bordered)
       .controlSize(.regular)

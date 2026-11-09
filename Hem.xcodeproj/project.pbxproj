@@ -43,6 +43,7 @@
 		A10000000000000000000025 /* ExportScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000029 /* ExportScreen.swift */; };
 		A10000000000000000000026 /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002A /* SettingsScreen.swift */; };
 		A10000000000000000000027 /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002B /* AppTab.swift */; };
+		A100000000000000000000F0 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000000000000000000F0 /* AppModel.swift */; };
 		A10000000000000000000028 /* ExportDisplayResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002C /* ExportDisplayResult.swift */; };
 		A1000000000000000000002A /* ReadinessState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002E /* ReadinessState.swift */; };
 		A1000000000000000000002B /* HemWebEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002F /* HemWebEndpoint.swift */; };
@@ -116,6 +117,7 @@
 		A20000000000000000000029 /* ExportScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportScreen.swift; sourceTree = "<group>"; };
 		A2000000000000000000002A /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
 		A2000000000000000000002B /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
+		A200000000000000000000F0 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		A2000000000000000000002C /* ExportDisplayResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportDisplayResult.swift; sourceTree = "<group>"; };
 		A2000000000000000000002E /* ReadinessState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessState.swift; sourceTree = "<group>"; };
 		A2000000000000000000002F /* HemWebEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HemWebEndpoint.swift; sourceTree = "<group>"; };
@@ -278,6 +280,7 @@
 		A7000000000000000000000C /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				A200000000000000000000F0 /* AppModel.swift */,
 				A2000000000000000000002B /* AppTab.swift */,
 				A2000000000000000000002C /* ExportDisplayResult.swift */,
 				A2000000000000000000002E /* ReadinessState.swift */,
@@ -529,6 +532,7 @@
 				A10000000000000000000039 /* ExportPreviewSheet.swift in Sources */,
 				A1000000000000000000003A /* HistoryScreen.swift in Sources */,
 				A10000000000000000000038 /* MetricSelectionGrid.swift in Sources */,
+				A100000000000000000000F0 /* AppModel.swift in Sources */,
 				A10000000000000000000027 /* AppTab.swift in Sources */,
 				A10000000000000000000028 /* ExportDisplayResult.swift in Sources */,
 				A1000000000000000000002A /* ReadinessState.swift in Sources */,
