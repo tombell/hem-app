@@ -56,34 +56,25 @@ struct HealthExportService {
     for range: WeekRange,
     including selectedMetrics: Set<ExportMetricCategory>
   ) async throws -> [ExportPayload.DailyMetric] {
-    var valuesByKind:
-      [HealthMetricDefinitions.DailyQuantityMetric.Kind: [Date: ExportPayload.QuantityValue]] = [:]
-    for metric in HealthMetricDefinitions.dailyQuantityMetrics
-    where selectedMetrics.contains(metric.exportCategory) {
-      valuesByKind[metric.kind] = try await skippingUnavailableMetric(fallback: [:]) {
-        try await dailyCumulativeValues(for: metric, range: range)
-      }
-    }
-
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = range.resolvedTimeZone
 
-    return range.days().compactMap { dayStart in
-      let dailyMetric = ExportPayload.DailyMetric(
-        date: ExportDateFormatting.dayString(for: dayStart, calendar: calendar),
-        steps: valuesByKind[.steps]?[dayStart],
-        activeEnergy: valuesByKind[.activeEnergy]?[dayStart],
-        basalEnergy: valuesByKind[.basalEnergy]?[dayStart],
-        exerciseTime: valuesByKind[.exerciseTime]?[dayStart],
-        walkingRunningDistance: valuesByKind[.walkingRunningDistance]?[dayStart],
-        cyclingDistance: valuesByKind[.cyclingDistance]?[dayStart],
-        swimmingDistance: valuesByKind[.swimmingDistance]?[dayStart],
-        swimmingStrokeCount: valuesByKind[.swimmingStrokeCount]?[dayStart],
-        flightsClimbed: valuesByKind[.flightsClimbed]?[dayStart]
-      )
-
-      return dailyMetric.hasValues ? dailyMetric : nil
+    var metricsByDay: [Date: ExportPayload.DailyMetric] = [:]
+    for metric in HealthMetricDefinitions.dailyQuantityMetrics
+    where selectedMetrics.contains(metric.exportCategory) {
+      let values = try await skippingUnavailableMetric(fallback: [:]) {
+        try await dailyCumulativeValues(for: metric, range: range)
+      }
+      for (dayStart, value) in values {
+        metricsByDay[
+          dayStart,
+          default: ExportPayload.DailyMetric(
+            date: ExportDateFormatting.dayString(for: dayStart, calendar: calendar))
+        ][keyPath: metric.value] = value
+      }
     }
+
+    return range.days().compactMap { metricsByDay[$0] }
   }
 
   private func dailyCumulativeValues(
