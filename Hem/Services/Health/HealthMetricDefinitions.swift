@@ -2,60 +2,12 @@ import HealthKit
 
 enum HealthMetricDefinitions {
   struct DailyQuantityMetric {
-    enum Kind: Hashable {
-      case steps
-      case activeEnergy
-      case basalEnergy
-      case exerciseTime
-      case walkingRunningDistance
-      case cyclingDistance
-      case swimmingDistance
-      case swimmingStrokeCount
-      case flightsClimbed
-    }
-
-    let kind: Kind
+    /// The `DailyMetric` field that stores this metric's daily total.
+    let value: WritableKeyPath<ExportPayload.DailyMetric, ExportPayload.QuantityValue?>
     let identifier: HKQuantityTypeIdentifier
     let unit: HKUnit
     let exportUnit: String
-
-    var exportCategory: ExportMetricCategory {
-      switch kind {
-      case .steps:
-        .steps
-      case .activeEnergy, .basalEnergy:
-        .energy
-      case .exerciseTime:
-        .exercise
-      case .walkingRunningDistance, .cyclingDistance, .swimmingDistance:
-        .distance
-      case .swimmingStrokeCount, .flightsClimbed:
-        .exercise
-      }
-    }
-
-    var value: KeyPath<ExportPayload.DailyMetric, ExportPayload.QuantityValue?> {
-      switch kind {
-      case .steps:
-        \.steps
-      case .activeEnergy:
-        \.activeEnergy
-      case .basalEnergy:
-        \.basalEnergy
-      case .exerciseTime:
-        \.exerciseTime
-      case .walkingRunningDistance:
-        \.walkingRunningDistance
-      case .cyclingDistance:
-        \.cyclingDistance
-      case .swimmingDistance:
-        \.swimmingDistance
-      case .swimmingStrokeCount:
-        \.swimmingStrokeCount
-      case .flightsClimbed:
-        \.flightsClimbed
-      }
-    }
+    let exportCategory: ExportMetricCategory
   }
 
   struct SampleQuantityMetric {
@@ -102,58 +54,67 @@ enum HealthMetricDefinitions {
 
   static let dailyQuantityMetrics = [
     DailyQuantityMetric(
-      kind: .steps,
+      value: \.steps,
       identifier: .stepCount,
       unit: .count(),
-      exportUnit: "count"
+      exportUnit: "count",
+      exportCategory: .steps
     ),
     DailyQuantityMetric(
-      kind: .activeEnergy,
+      value: \.activeEnergy,
       identifier: .activeEnergyBurned,
       unit: .kilocalorie(),
-      exportUnit: "kcal"
+      exportUnit: "kcal",
+      exportCategory: .energy
     ),
     DailyQuantityMetric(
-      kind: .basalEnergy,
+      value: \.basalEnergy,
       identifier: .basalEnergyBurned,
       unit: .kilocalorie(),
-      exportUnit: "kcal"
+      exportUnit: "kcal",
+      exportCategory: .energy
     ),
     DailyQuantityMetric(
-      kind: .exerciseTime,
+      value: \.exerciseTime,
       identifier: .appleExerciseTime,
       unit: .minute(),
-      exportUnit: "min"
+      exportUnit: "min",
+      exportCategory: .exercise
     ),
     DailyQuantityMetric(
-      kind: .walkingRunningDistance,
+      value: \.walkingRunningDistance,
       identifier: .distanceWalkingRunning,
       unit: .meterUnit(with: .kilo),
-      exportUnit: "km"
+      exportUnit: "km",
+      exportCategory: .distance
     ),
     DailyQuantityMetric(
-      kind: .cyclingDistance,
+      value: \.cyclingDistance,
       identifier: .distanceCycling,
       unit: .meterUnit(with: .kilo),
-      exportUnit: "km"
+      exportUnit: "km",
+      exportCategory: .distance
     ),
     DailyQuantityMetric(
-      kind: .swimmingDistance,
+      value: \.swimmingDistance,
       identifier: .distanceSwimming,
       unit: .meterUnit(with: .kilo),
-      exportUnit: "km"
+      exportUnit: "km",
+      exportCategory: .distance
     ),
     DailyQuantityMetric(
-      kind: .swimmingStrokeCount,
+      value: \.swimmingStrokeCount,
       identifier: .swimmingStrokeCount,
       unit: .count(),
-      exportUnit: "count"
+      exportUnit: "count",
+      exportCategory: .exercise
     ),
     DailyQuantityMetric(
-      kind: .flightsClimbed,
+      value: \.flightsClimbed,
       identifier: .flightsClimbed,
       unit: .count(),
-      exportUnit: "count"
+      exportUnit: "count",
+      exportCategory: .exercise
     ),
   ]
 

@@ -83,21 +83,15 @@ extension ExportPayload {
 
   struct DailyMetric: Codable, Equatable {
     let date: String
-    let steps: QuantityValue?
-    let activeEnergy: QuantityValue?
-    let basalEnergy: QuantityValue?
-    let exerciseTime: QuantityValue?
-    let walkingRunningDistance: QuantityValue?
-    let cyclingDistance: QuantityValue?
-    let swimmingDistance: QuantityValue?
-    let swimmingStrokeCount: QuantityValue?
-    let flightsClimbed: QuantityValue?
-
-    var hasValues: Bool {
-      steps != nil || activeEnergy != nil || basalEnergy != nil || exerciseTime != nil
-        || walkingRunningDistance != nil || cyclingDistance != nil || swimmingDistance != nil
-        || swimmingStrokeCount != nil || flightsClimbed != nil
-    }
+    var steps: QuantityValue? = nil
+    var activeEnergy: QuantityValue? = nil
+    var basalEnergy: QuantityValue? = nil
+    var exerciseTime: QuantityValue? = nil
+    var walkingRunningDistance: QuantityValue? = nil
+    var cyclingDistance: QuantityValue? = nil
+    var swimmingDistance: QuantityValue? = nil
+    var swimmingStrokeCount: QuantityValue? = nil
+    var flightsClimbed: QuantityValue? = nil
   }
 
   struct HealthSample: Codable, Equatable {
