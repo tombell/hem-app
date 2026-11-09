@@ -30,11 +30,6 @@ struct ExportDateRangeStore {
     userDefaults.set(throughDate, forKey: selectedThroughDateKey)
   }
 
-  func reset() {
-    userDefaults.removeObject(forKey: selectedStartDateKey)
-    userDefaults.removeObject(forKey: selectedThroughDateKey)
-  }
-
   private func throughDate(for range: WeekRange) -> Date {
     Calendar.vitalsDefault.date(byAdding: .day, value: -1, to: range.end) ?? range.start
   }
@@ -62,9 +57,5 @@ struct MetricSelectionStore {
       .filter(metrics.contains)
       .map(\.rawValue)
     userDefaults.set(rawValues, forKey: selectedMetricsKey)
-  }
-
-  func reset() {
-    userDefaults.removeObject(forKey: selectedMetricsKey)
   }
 }

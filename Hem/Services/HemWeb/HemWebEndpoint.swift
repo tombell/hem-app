@@ -1,7 +1,6 @@
 import Foundation
 
 struct HemWebEndpoint: Equatable {
-  let endpointURL: URL
   let importURL: URL
 
   var host: String {
@@ -43,7 +42,6 @@ struct HemWebEndpoint: Equatable {
       throw HemWebClientError.invalidEndpoint
     }
 
-    self.endpointURL = endpointURL
     self.importURL = importURL
   }
 }

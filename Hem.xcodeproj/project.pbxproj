@@ -35,7 +35,6 @@
 		A1000000000000000000001B /* HeaderPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001F /* HeaderPanel.swift */; };
 		A1000000000000000000001C /* HealthPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000020 /* HealthPanel.swift */; };
 		A1000000000000000000001D /* InfoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000021 /* InfoRow.swift */; };
-		A1000000000000000000001E /* MetricGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000022 /* MetricGrid.swift */; };
 		A1000000000000000000001F /* ReadinessPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000023 /* ReadinessPanel.swift */; };
 		A10000000000000000000020 /* ReadinessPill.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000024 /* ReadinessPill.swift */; };
 		A10000000000000000000021 /* ResultBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000025 /* ResultBanner.swift */; };
@@ -45,7 +44,6 @@
 		A10000000000000000000026 /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002A /* SettingsScreen.swift */; };
 		A10000000000000000000027 /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002B /* AppTab.swift */; };
 		A10000000000000000000028 /* ExportDisplayResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002C /* ExportDisplayResult.swift */; };
-		A10000000000000000000029 /* MetricItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002D /* MetricItem.swift */; };
 		A1000000000000000000002A /* ReadinessState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002E /* ReadinessState.swift */; };
 		A1000000000000000000002B /* HemWebEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002F /* HemWebEndpoint.swift */; };
 		A1000000000000000000002C /* ExportSourceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000030 /* ExportSourceProvider.swift */; };
@@ -110,7 +108,6 @@
 		A2000000000000000000001F /* HeaderPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderPanel.swift; sourceTree = "<group>"; };
 		A20000000000000000000020 /* HealthPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthPanel.swift; sourceTree = "<group>"; };
 		A20000000000000000000021 /* InfoRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoRow.swift; sourceTree = "<group>"; };
-		A20000000000000000000022 /* MetricGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricGrid.swift; sourceTree = "<group>"; };
 		A20000000000000000000023 /* ReadinessPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessPanel.swift; sourceTree = "<group>"; };
 		A20000000000000000000024 /* ReadinessPill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessPill.swift; sourceTree = "<group>"; };
 		A20000000000000000000025 /* ResultBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultBanner.swift; sourceTree = "<group>"; };
@@ -120,7 +117,6 @@
 		A2000000000000000000002A /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
 		A2000000000000000000002B /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
 		A2000000000000000000002C /* ExportDisplayResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportDisplayResult.swift; sourceTree = "<group>"; };
-		A2000000000000000000002D /* MetricItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricItem.swift; sourceTree = "<group>"; };
 		A2000000000000000000002E /* ReadinessState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessState.swift; sourceTree = "<group>"; };
 		A2000000000000000000002F /* HemWebEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HemWebEndpoint.swift; sourceTree = "<group>"; };
 		A20000000000000000000030 /* ExportSourceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportSourceProvider.swift; sourceTree = "<group>"; };
@@ -284,7 +280,6 @@
 			children = (
 				A2000000000000000000002B /* AppTab.swift */,
 				A2000000000000000000002C /* ExportDisplayResult.swift */,
-				A2000000000000000000002D /* MetricItem.swift */,
 				A2000000000000000000002E /* ReadinessState.swift */,
 			);
 			path = Support;
@@ -386,7 +381,6 @@
 				A2000000000000000000001A /* DashboardPanel.swift */,
 				A2000000000000000000001F /* HeaderPanel.swift */,
 				A20000000000000000000020 /* HealthPanel.swift */,
-				A20000000000000000000022 /* MetricGrid.swift */,
 				A20000000000000000000023 /* ReadinessPanel.swift */,
 				A20000000000000000000024 /* ReadinessPill.swift */,
 			);
@@ -526,7 +520,6 @@
 				A1000000000000000000001B /* HeaderPanel.swift in Sources */,
 				A1000000000000000000001C /* HealthPanel.swift in Sources */,
 				A1000000000000000000001D /* InfoRow.swift in Sources */,
-				A1000000000000000000001E /* MetricGrid.swift in Sources */,
 				A1000000000000000000001F /* ReadinessPanel.swift in Sources */,
 				A10000000000000000000020 /* ReadinessPill.swift in Sources */,
 				A10000000000000000000021 /* ResultBanner.swift in Sources */,
@@ -538,7 +531,6 @@
 				A10000000000000000000038 /* MetricSelectionGrid.swift in Sources */,
 				A10000000000000000000027 /* AppTab.swift in Sources */,
 				A10000000000000000000028 /* ExportDisplayResult.swift in Sources */,
-				A10000000000000000000029 /* MetricItem.swift in Sources */,
 				A1000000000000000000002A /* ReadinessState.swift in Sources */,
 				A10000000000000000000003 /* ExportDateFormatting.swift in Sources */,
 				A10000000000000000000032 /* ExportMetricCategory.swift in Sources */,

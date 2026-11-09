@@ -3,23 +3,8 @@ import SwiftUI
 struct HeaderPanel: View {
   let title: String
   let subtitle: String
-  let detail: String?
   let systemImage: String
   let tint: Color
-
-  init(
-    title: String,
-    subtitle: String,
-    detail: String? = nil,
-    systemImage: String,
-    tint: Color
-  ) {
-    self.title = title
-    self.subtitle = subtitle
-    self.detail = detail
-    self.systemImage = systemImage
-    self.tint = tint
-  }
 
   var body: some View {
     HStack(spacing: 10) {
@@ -43,12 +28,6 @@ struct HeaderPanel: View {
         Text(subtitle)
           .font(.subheadline.weight(.medium))
           .foregroundStyle(.secondary)
-
-        if let detail {
-          Text(detail)
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(tint)
-        }
       }
 
       Spacer(minLength: 0)

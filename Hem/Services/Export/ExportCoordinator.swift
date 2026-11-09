@@ -324,8 +324,7 @@ struct ExportCoordinator {
       payloadFileName: nil,
       errorMessage: nil,
       errorCode: nil,
-      httpStatus: nil,
-      serverResponseSummary: nil
+      httpStatus: nil
     )
   }
 
@@ -357,8 +356,7 @@ struct ExportCoordinator {
         errorMessage: isDeferred
           ? Self.deferredHealthAccessMessage : ExportErrorPresentation.message(for: error),
         errorCode: errorCode(for: error),
-        httpStatus: nil,
-        serverResponseSummary: nil
+        httpStatus: nil
       )
     )
   }

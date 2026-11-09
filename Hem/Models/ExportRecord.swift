@@ -18,7 +18,6 @@ struct ExportRecord: Codable, Identifiable, Equatable {
   var errorMessage: String?
   var errorCode: String?
   var httpStatus: Int?
-  var serverResponseSummary: String?
   var serverImportID: Int? = nil
   var serverImportStatus: HemWebImportStatus? = nil
   var serverCounts: HemWebImportCounts? = nil

@@ -78,8 +78,7 @@ struct HistoryScreen: View {
         payloadFileName: nil,
         errorMessage: nil,
         errorCode: nil,
-        httpStatus: 201,
-        serverResponseSummary: nil
+        httpStatus: 201
       ),
       ExportRecord(
         id: UUID(),
@@ -98,8 +97,7 @@ struct HistoryScreen: View {
         payloadFileName: "queued.json",
         errorMessage: "The network connection was lost.",
         errorCode: "URLError",
-        httpStatus: nil,
-        serverResponseSummary: nil
+        httpStatus: nil
       ),
     ],
     retryAction: { _ in },

@@ -20,8 +20,4 @@ struct ExportCheckpointStore {
     }
     userDefaults.set(date, forKey: lastSuccessEndKey)
   }
-
-  func reset() {
-    userDefaults.removeObject(forKey: lastSuccessEndKey)
-  }
 }
