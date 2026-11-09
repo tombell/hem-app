@@ -12,7 +12,12 @@ struct ExportCheckpointStore {
     userDefaults.object(forKey: lastSuccessEndKey) as? Date
   }
 
-  func saveLastSuccessEnd(_ date: Date) {
+  /// Records a successful export end, never moving the checkpoint backwards so that
+  /// backfilling an older range does not cause later data to be re-exported.
+  func advanceLastSuccessEnd(to date: Date) {
+    if let current = loadLastSuccessEnd(), current >= date {
+      return
+    }
     userDefaults.set(date, forKey: lastSuccessEndKey)
   }
 

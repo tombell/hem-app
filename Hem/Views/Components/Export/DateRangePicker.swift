@@ -6,13 +6,16 @@ struct DateRangePicker: View {
 
   var body: some View {
     VStack(spacing: 8) {
-      DatePicker("From", selection: $startDate, displayedComponents: .date)
+      DatePicker("From", selection: $startDate, in: ...Date.now, displayedComponents: .date)
         .datePickerStyle(.compact)
 
       Divider()
 
-      DatePicker("Through", selection: $throughDate, in: startDate..., displayedComponents: .date)
-        .datePickerStyle(.compact)
+      DatePicker(
+        "Through", selection: $throughDate, in: startDate...max(startDate, Date.now),
+        displayedComponents: .date
+      )
+      .datePickerStyle(.compact)
     }
     .font(.subheadline)
   }

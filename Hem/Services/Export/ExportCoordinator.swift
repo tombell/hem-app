@@ -89,7 +89,7 @@ struct ExportCoordinator {
       record.errorMessage = nil
       record.errorCode = nil
       record.nextRetryAt = nil
-      checkpointStore.saveLastSuccessEnd(draft.range.end)
+      checkpointStore.advanceLastSuccessEnd(to: min(draft.range.end, now()))
     } catch {
       record.completedAt = now()
       record.errorMessage = ExportErrorPresentation.message(for: error)
@@ -402,7 +402,7 @@ struct ExportCoordinator {
       record.errorCode = nil
       record.nextRetryAt = nil
       record.payloadFileName = nil
-      checkpointStore.saveLastSuccessEnd(draft.range.end)
+      checkpointStore.advanceLastSuccessEnd(to: min(draft.range.end, now()))
       if let queuedPayloadFileName {
         try? historyStore.deletePayload(named: queuedPayloadFileName)
       }
