@@ -10,6 +10,7 @@ struct ExportCoordinator {
   private let client: HemWebClient
   private let historyStore: any ExportHistoryStoring
   private let checkpointStore: ExportCheckpointStore
+  private let lock: ExportLock
   private let uuid: () -> UUID
   private let now: () -> Date
 
@@ -19,6 +20,7 @@ struct ExportCoordinator {
     client: HemWebClient = HemWebClient(),
     historyStore: any ExportHistoryStoring = ExportHistoryStore(),
     checkpointStore: ExportCheckpointStore = ExportCheckpointStore(),
+    lock: ExportLock = .shared,
     uuid: @escaping () -> UUID = UUID.init,
     now: @escaping () -> Date = Date.init
   ) {
@@ -27,6 +29,7 @@ struct ExportCoordinator {
     self.client = client
     self.historyStore = historyStore
     self.checkpointStore = checkpointStore
+    self.lock = lock
     self.uuid = uuid
     self.now = now
   }
@@ -35,7 +38,13 @@ struct ExportCoordinator {
     try historyStore.loadRecords()
   }
 
-  func deleteRecord(id: UUID) throws {
+  func deleteRecord(id: UUID) async throws {
+    try await lock.withExclusiveAccess {
+      try deleteRecordUnlocked(id: id)
+    }
+  }
+
+  private func deleteRecordUnlocked(id: UUID) throws {
     var records = try historyStore.loadRecords()
     guard let index = records.firstIndex(where: { $0.id == id }) else {
       throw ExportCoordinatorError.recordNotFound
@@ -70,7 +79,16 @@ struct ExportCoordinator {
     )
   }
 
-  func send(_ draft: ExportDraft, retrySourceID: UUID? = nil) async throws -> ExportSummary {
+  func send(_ draft: ExportDraft) async throws -> ExportSummary {
+    try await lock.withExclusiveAccess {
+      try await sendUnlocked(draft)
+    }
+  }
+
+  private func sendUnlocked(
+    _ draft: ExportDraft,
+    retrySourceID: UUID? = nil
+  ) async throws -> ExportSummary {
     let configuration = try configurationStore.load()
     var records = try historyStore.loadRecords()
     var record = makeRecord(from: draft, configuration: configuration, retrySourceID: retrySourceID)
@@ -131,6 +149,16 @@ struct ExportCoordinator {
     mode: ExportMode = .manual,
     metrics: Set<ExportMetricCategory>
   ) async throws -> ExportSummary {
+    try await lock.withExclusiveAccess {
+      try await exportUnlocked(range: range, mode: mode, metrics: metrics)
+    }
+  }
+
+  private func exportUnlocked(
+    range: WeekRange,
+    mode: ExportMode,
+    metrics: Set<ExportMetricCategory>
+  ) async throws -> ExportSummary {
     let draft: ExportDraft
     do {
       draft = try await prepare(range: range, mode: mode, metrics: metrics)
@@ -157,7 +185,7 @@ struct ExportCoordinator {
       throw error
     }
 
-    return try await send(draft)
+    return try await sendUnlocked(draft)
   }
 
   func incrementalRange(calendar: Calendar = .vitalsDefault) -> WeekRange? {
@@ -183,6 +211,12 @@ struct ExportCoordinator {
   }
 
   func retry(recordID: UUID) async throws -> ExportSummary {
+    try await lock.withExclusiveAccess {
+      try await retryUnlocked(recordID: recordID)
+    }
+  }
+
+  private func retryUnlocked(recordID: UUID) async throws -> ExportSummary {
     let records = try historyStore.loadRecords()
     guard let record = records.first(where: { $0.id == recordID }) else {
       throw ExportCoordinatorError.recordNotFound
@@ -205,7 +239,7 @@ struct ExportCoordinator {
         counts: ExportCounts(payload: payload, range: record.range),
         warnings: warnings(for: payload, selectedMetrics: Set(record.metrics))
       )
-      return try await send(draft, retrySourceID: record.id)
+      return try await sendUnlocked(draft, retrySourceID: record.id)
     }
 
     let draft = try await prepare(
@@ -213,17 +247,19 @@ struct ExportCoordinator {
       mode: .retry,
       metrics: Set(record.metrics)
     )
-    return try await send(draft, retrySourceID: record.id)
+    return try await sendUnlocked(draft, retrySourceID: record.id)
   }
 
   func drainQueue() async {
-    guard let records = try? historyStore.loadRecords() else {
-      return
-    }
+    await lock.withExclusiveAccess {
+      guard let records = try? historyStore.loadRecords() else {
+        return
+      }
 
-    for record in records.reversed()
-    where record.status == .queued && (record.nextRetryAt == nil || record.nextRetryAt! <= now()) {
-      _ = try? await completeQueuedRecord(recordID: record.id)
+      for record in records.reversed()
+      where record.status == .queued && (record.nextRetryAt.map { $0 <= now() } ?? true) {
+        _ = try? await completeQueuedRecord(recordID: record.id)
+      }
     }
   }
 
@@ -582,6 +618,50 @@ struct ExportCoordinator {
     }
 
     return String(describing: type(of: error))
+  }
+}
+
+/// Serialises export operations that read, modify, and write export history.
+///
+/// The app UI, queue draining, and App Shortcuts each create their own `ExportCoordinator`, so
+/// the lock is shared to stop overlapping runs from sending the same queued export twice or
+/// overwriting each other's history updates.
+final class ExportLock: Sendable {
+  static let shared = ExportLock()
+
+  private let state = State()
+
+  func withExclusiveAccess<T>(_ operation: () async throws -> T) async rethrows -> T {
+    await state.acquire()
+    do {
+      let value = try await operation()
+      await state.release()
+      return value
+    } catch {
+      await state.release()
+      throw error
+    }
+  }
+
+  private actor State {
+    private var isLocked = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    func acquire() async {
+      guard isLocked else {
+        isLocked = true
+        return
+      }
+      await withCheckedContinuation { waiters.append($0) }
+    }
+
+    func release() {
+      if waiters.isEmpty {
+        isLocked = false
+      } else {
+        waiters.removeFirst().resume()
+      }
+    }
   }
 }
 
