@@ -4,7 +4,7 @@ struct HistoryScreen: View {
   let records: [ExportRecord]
   let retryAction: (UUID) async -> Void
   let diagnosticsAction: (UUID) -> String?
-  let deleteAction: (UUID) -> Void
+  let deleteAction: (UUID) async -> Void
 
   @State private var diagnosticsText: String?
 
@@ -23,7 +23,7 @@ struct HistoryScreen: View {
               ExportHistoryRow(record: record, retryAction: retryAction)
                 .swipeActions(edge: .trailing) {
                   Button("Delete", role: .destructive) {
-                    deleteAction(record.id)
+                    Task { await deleteAction(record.id) }
                   }
                   Button("Diagnostics") {
                     diagnosticsText = diagnosticsAction(record.id)

@@ -342,7 +342,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     XCTAssertEqual(record.serverImportStatus, .created)
   }
 
-  func testDeleteRecordRemovesRecordAndQueuedPayload() throws {
+  func testDeleteRecordRemovesRecordAndQueuedPayload() async throws {
     let queued = try record(
       requestedAt: VitalsTestFixture.date("2026-06-25T12:00:00+01:00"),
       payloadFileName: "queued.json"
@@ -351,19 +351,67 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     let store = MockExportHistoryStore(records: [queued, succeeded])
     let coordinator = ExportCoordinator(historyStore: store)
 
-    try coordinator.deleteRecord(id: queued.id)
+    try await coordinator.deleteRecord(id: queued.id)
 
     XCTAssertEqual(store.records, [succeeded])
     XCTAssertEqual(store.deletedPayloads, ["queued.json"])
   }
 
-  func testDeleteMissingRecordThrows() throws {
+  func testDeleteMissingRecordThrows() async throws {
     let store = MockExportHistoryStore(records: [])
     let coordinator = ExportCoordinator(historyStore: store)
 
-    XCTAssertThrowsError(try coordinator.deleteRecord(id: UUID())) { error in
+    do {
+      try await coordinator.deleteRecord(id: UUID())
+      XCTFail("Expected deleting a missing record to throw.")
+    } catch {
       XCTAssertEqual(error as? ExportCoordinatorError, .recordNotFound)
     }
+  }
+
+  func testConcurrentDrainsSendQueuedRecordOnce() async throws {
+    let (configurationStore, endpoint) = try configuredStore()
+    let now = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let queued = try record(requestedAt: now, payloadFileName: "queued.json")
+    let response = try XCTUnwrap(
+      HTTPURLResponse(
+        url: endpoint.importURL,
+        statusCode: 201,
+        httpVersion: nil,
+        headerFields: nil)
+    )
+    let session = MockHTTPSession(
+      data: Self.createdResponse,
+      response: response,
+      delay: .milliseconds(50)
+    )
+    let store = MockExportHistoryStore(
+      records: [queued],
+      payloads: ["queued.json": try VitalsTestFixture.payload()]
+    )
+    let lock = ExportLock()
+    let first = ExportCoordinator(
+      configurationStore: configurationStore,
+      client: HemWebClient(session: session),
+      historyStore: store,
+      lock: lock,
+      now: { now }
+    )
+    let second = ExportCoordinator(
+      configurationStore: configurationStore,
+      client: HemWebClient(session: session),
+      historyStore: store,
+      lock: lock,
+      now: { now }
+    )
+
+    async let firstDrain: Void = first.drainQueue()
+    async let secondDrain: Void = second.drainQueue()
+    _ = await (firstDrain, secondDrain)
+
+    XCTAssertEqual(session.requestCount, 1)
+    XCTAssertEqual(store.records.first?.status, .succeeded)
+    XCTAssertEqual(store.records.first?.attemptCount, 2)
   }
 
   func testRateLimitedManualExportQueuesPayloadUntilRetryDate() async throws {
@@ -793,13 +841,20 @@ private struct MockHealthExportService: HealthExportServicing {
 private final class MockHTTPSession: HTTPSession {
   private let dataValue: Data
   private let responseValue: URLResponse
+  private let delay: Duration?
+  private(set) var requestCount = 0
 
-  init(data: Data, response: URLResponse) {
+  init(data: Data, response: URLResponse, delay: Duration? = nil) {
     dataValue = data
     responseValue = response
+    self.delay = delay
   }
 
   func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+    requestCount += 1
+    if let delay {
+      try await Task.sleep(for: delay)
+    }
     return (dataValue, responseValue)
   }
 }

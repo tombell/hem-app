@@ -319,9 +319,9 @@ struct ContentView: View {
     try? exportCoordinator.diagnostics(for: recordID).text
   }
 
-  private func deleteRecord(recordID: UUID) {
+  private func deleteRecord(recordID: UUID) async {
     do {
-      try exportCoordinator.deleteRecord(id: recordID)
+      try await exportCoordinator.deleteRecord(id: recordID)
       refreshRecords()
       lastResult = .success("Export history item removed")
     } catch {
