@@ -2,7 +2,7 @@ import XCTest
 
 @testable import Hem
 
-enum VitalsTestFixture {
+enum HemTestFixture {
   static func date(_ string: String, file: StaticString = #filePath, line: UInt = #line) throws
     -> Date
   {
@@ -11,7 +11,7 @@ enum VitalsTestFixture {
 
   static func previousFullWeek(
     now string: String = "2026-06-24T12:00:00+01:00",
-    calendar: Calendar = .vitalsDefault
+    calendar: Calendar = .exportDefault
   ) throws -> WeekRange {
     WeekRange.previousFullWeek(now: try date(string), calendar: calendar)
   }
@@ -31,7 +31,7 @@ enum VitalsTestFixture {
     -> ExportPayload
   {
     let now = try date(string)
-    let range = WeekRange.previousFullWeek(now: now, calendar: .vitalsDefault)
+    let range = WeekRange.previousFullWeek(now: now, calendar: .exportDefault)
 
     return ExportPayload(
       source: source,
@@ -46,7 +46,7 @@ enum VitalsTestFixture {
 
   private static var iso8601: DateFormatter {
     let formatter = DateFormatter()
-    formatter.calendar = .vitalsDefault
+    formatter.calendar = .exportDefault
     formatter.locale = Locale(identifier: "en_GB")
     formatter.timeZone = TimeZone(identifier: "Europe/London")
     formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssXXXXX"

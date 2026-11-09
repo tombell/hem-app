@@ -9,7 +9,7 @@ final class AppModel {
   var bearerToken = ""
   var selectedStartDate: Date {
     didSet {
-      let calendar = Calendar.vitalsDefault
+      let calendar = Calendar.exportDefault
       if calendar.startOfDay(for: selectedThroughDate)
         < calendar.startOfDay(for: selectedStartDate)
       {

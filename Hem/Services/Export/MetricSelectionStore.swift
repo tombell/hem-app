@@ -17,7 +17,7 @@ struct ExportDateRangeStore {
       return (defaultRange.start, defaultThroughDate)
     }
 
-    let calendar = Calendar.vitalsDefault
+    let calendar = Calendar.exportDefault
     guard calendar.startOfDay(for: throughDate) >= calendar.startOfDay(for: startDate) else {
       return (defaultRange.start, defaultThroughDate)
     }
@@ -31,7 +31,7 @@ struct ExportDateRangeStore {
   }
 
   private func throughDate(for range: WeekRange) -> Date {
-    Calendar.vitalsDefault.date(byAdding: .day, value: -1, to: range.end) ?? range.start
+    Calendar.exportDefault.date(byAdding: .day, value: -1, to: range.end) ?? range.start
   }
 }
 

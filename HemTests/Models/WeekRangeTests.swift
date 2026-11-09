@@ -4,8 +4,8 @@ import XCTest
 
 final class WeekRangeTests: XCTestCase {
   func testPreviousDayUsesYesterdayBoundariesInLondon() throws {
-    let now = try VitalsTestFixture.date("2026-06-24T12:00:00+01:00")
-    let calendar = Calendar.vitalsDefault
+    let now = try HemTestFixture.date("2026-06-24T12:00:00+01:00")
+    let calendar = Calendar.exportDefault
 
     let range = WeekRange.previousDay(now: now, calendar: calendar)
 
@@ -19,13 +19,13 @@ final class WeekRangeTests: XCTestCase {
   }
 
   func testPreviousDayUsesPreviousCalendarDateJustAfterMidnight() throws {
-    let calendar = Calendar.vitalsDefault
+    let calendar = Calendar.exportDefault
     let julyFirstRun = WeekRange.previousDay(
-      now: try VitalsTestFixture.date("2026-07-01T00:10:00+01:00"),
+      now: try HemTestFixture.date("2026-07-01T00:10:00+01:00"),
       calendar: calendar
     )
     let juneThirtiethRun = WeekRange.previousDay(
-      now: try VitalsTestFixture.date("2026-06-30T00:10:00+01:00"),
+      now: try HemTestFixture.date("2026-06-30T00:10:00+01:00"),
       calendar: calendar
     )
 
@@ -43,8 +43,8 @@ final class WeekRangeTests: XCTestCase {
   }
 
   func testPreviousDayUsesCalendarDayAcrossDSTBoundary() throws {
-    let now = try VitalsTestFixture.date("2026-03-30T12:00:00+01:00")
-    let calendar = Calendar.vitalsDefault
+    let now = try HemTestFixture.date("2026-03-30T12:00:00+01:00")
+    let calendar = Calendar.exportDefault
 
     let range = WeekRange.previousDay(now: now, calendar: calendar)
 
@@ -55,8 +55,8 @@ final class WeekRangeTests: XCTestCase {
   }
 
   func testPreviousFullWeekUsesMondayBoundariesInLondon() throws {
-    let now = try VitalsTestFixture.date("2026-06-24T12:00:00+01:00")
-    let calendar = Calendar.vitalsDefault
+    let now = try HemTestFixture.date("2026-06-24T12:00:00+01:00")
+    let calendar = Calendar.exportDefault
 
     let range = WeekRange.previousFullWeek(now: now, calendar: calendar)
 
@@ -68,8 +68,8 @@ final class WeekRangeTests: XCTestCase {
   }
 
   func testPreviousFullWeekOnMondayReturnsPriorWeek() throws {
-    let now = try VitalsTestFixture.date("2026-06-22T09:00:00+01:00")
-    let calendar = Calendar.vitalsDefault
+    let now = try HemTestFixture.date("2026-06-22T09:00:00+01:00")
+    let calendar = Calendar.exportDefault
 
     let range = WeekRange.previousFullWeek(now: now, calendar: calendar)
 
@@ -79,17 +79,17 @@ final class WeekRangeTests: XCTestCase {
   }
 
   func testDaysIncludesSevenStartDates() throws {
-    let now = try VitalsTestFixture.date("2026-06-24T12:00:00+01:00")
+    let now = try HemTestFixture.date("2026-06-24T12:00:00+01:00")
 
-    let range = WeekRange.previousFullWeek(now: now, calendar: .vitalsDefault)
+    let range = WeekRange.previousFullWeek(now: now, calendar: .exportDefault)
 
     XCTAssertEqual(range.days().count, 7)
   }
 
   func testCustomRangeUsesSelectedDaysWithExclusivePayloadEnd() throws {
-    let start = try VitalsTestFixture.date("2026-06-10T18:30:00+01:00")
-    let through = try VitalsTestFixture.date("2026-06-12T09:15:00+01:00")
-    let calendar = Calendar.vitalsDefault
+    let start = try HemTestFixture.date("2026-06-10T18:30:00+01:00")
+    let through = try HemTestFixture.date("2026-06-12T09:15:00+01:00")
+    let calendar = Calendar.exportDefault
 
     let range = try WeekRange.custom(from: start, through: through, calendar: calendar)
 
@@ -102,17 +102,17 @@ final class WeekRangeTests: XCTestCase {
   }
 
   func testCustomRangeRejectsEndBeforeStart() throws {
-    let start = try VitalsTestFixture.date("2026-06-12T09:15:00+01:00")
-    let through = try VitalsTestFixture.date("2026-06-10T18:30:00+01:00")
+    let start = try HemTestFixture.date("2026-06-12T09:15:00+01:00")
+    let through = try HemTestFixture.date("2026-06-10T18:30:00+01:00")
 
     XCTAssertThrowsError(
-      try WeekRange.custom(from: start, through: through, calendar: .vitalsDefault))
+      try WeekRange.custom(from: start, through: through, calendar: .exportDefault))
   }
 
   func testExportSummaryIntentDialogUsesInclusiveRange() throws {
     let range = try WeekRange.custom(
-      from: VitalsTestFixture.date("2026-06-10T18:30:00+01:00"),
-      through: VitalsTestFixture.date("2026-06-12T09:15:00+01:00")
+      from: HemTestFixture.date("2026-06-10T18:30:00+01:00"),
+      through: HemTestFixture.date("2026-06-12T09:15:00+01:00")
     )
     let summary = ExportSummary(
       range: range,
