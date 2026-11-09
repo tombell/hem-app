@@ -40,22 +40,18 @@ struct ExportCoordinator {
 
   func deleteRecord(id: UUID) async throws {
     try await lock.withExclusiveAccess {
-      try deleteRecordUnlocked(id: id)
-    }
-  }
+      var records = try historyStore.loadRecords()
+      guard let index = records.firstIndex(where: { $0.id == id }) else {
+        throw ExportCoordinatorError.recordNotFound
+      }
 
-  private func deleteRecordUnlocked(id: UUID) throws {
-    var records = try historyStore.loadRecords()
-    guard let index = records.firstIndex(where: { $0.id == id }) else {
-      throw ExportCoordinatorError.recordNotFound
-    }
+      let record = records.remove(at: index)
+      if let payloadFileName = record.payloadFileName {
+        try historyStore.deletePayload(named: payloadFileName)
+      }
 
-    let record = records.remove(at: index)
-    if let payloadFileName = record.payloadFileName {
-      try historyStore.deletePayload(named: payloadFileName)
+      try historyStore.saveRecords(records)
     }
-
-    try historyStore.saveRecords(records)
   }
 
   func prepare(
@@ -64,84 +60,20 @@ struct ExportCoordinator {
     metrics: Set<ExportMetricCategory>
   ) async throws -> ExportDraft {
     let configuration = try configurationStore.load()
-    let orderedMetrics = ordered(metrics)
     let payload = try await exportService.makePayload(for: range, including: metrics)
-    let counts = ExportCounts(payload: payload, range: range)
-    return ExportDraft(
+    return makeDraft(
       range: range,
       mode: mode,
-      metrics: orderedMetrics,
-      destinationHost: configuration.endpoint.host,
-      endpointURLString: configuration.endpoint.importURL.absoluteString,
+      metrics: metrics,
       payload: payload,
-      counts: counts,
-      warnings: warnings(for: payload, selectedMetrics: metrics)
+      configuration: configuration
     )
   }
 
   func send(_ draft: ExportDraft) async throws -> ExportSummary {
     try await lock.withExclusiveAccess {
-      try await sendUnlocked(draft)
+      try await deliver(draft, as: newRecord(for: draft))
     }
-  }
-
-  private func sendUnlocked(
-    _ draft: ExportDraft,
-    retrySourceID: UUID? = nil
-  ) async throws -> ExportSummary {
-    let configuration = try configurationStore.load()
-    var records = try historyStore.loadRecords()
-    var record = makeRecord(from: draft, configuration: configuration, retrySourceID: retrySourceID)
-    records.insert(record, at: 0)
-    try historyStore.saveRecords(records)
-
-    do {
-      let responseSummary = try await client.post(
-        payload: draft.payload,
-        endpoint: configuration.endpoint,
-        bearerToken: configuration.bearerToken
-      )
-      record.status = .succeeded
-      record.completedAt = now()
-      apply(responseSummary, to: &record)
-      record.errorMessage = nil
-      record.errorCode = nil
-      record.nextRetryAt = nil
-      checkpointStore.advanceLastSuccessEnd(to: min(draft.range.end, now()))
-    } catch {
-      record.completedAt = now()
-      record.errorMessage = ExportErrorPresentation.message(for: error)
-      record.errorCode = errorCode(for: error)
-      record.httpStatus = (error as? HemWebClientError)?.statusCode
-      record.nextRetryAt = nextRetryDate(for: error)
-
-      if shouldQueue(error) {
-        let payloadFileName = "\(record.id.uuidString).json"
-        try historyStore.savePayload(draft.payload, named: payloadFileName)
-        record.status = .queued
-        record.payloadFileName = payloadFileName
-      } else {
-        record.status = .failed
-      }
-
-      try replace(record, in: &records)
-      try historyStore.saveRecords(records)
-      throw error
-    }
-
-    try replace(record, in: &records)
-    try historyStore.saveRecords(records)
-    return ExportSummary(
-      range: draft.range,
-      destinationHost: draft.destinationHost,
-      dailyMetricCount: draft.counts.dailyMetricCount,
-      sampleCount: draft.counts.sampleCount,
-      categorySampleCount: draft.counts.categorySampleCount,
-      workoutCount: draft.counts.workoutCount,
-      sleepSampleCount: draft.counts.sleepSampleCount,
-      serverImportStatus: record.serverImportStatus,
-      serverCounts: record.serverCounts
-    )
   }
 
   func export(
@@ -150,42 +82,23 @@ struct ExportCoordinator {
     metrics: Set<ExportMetricCategory>
   ) async throws -> ExportSummary {
     try await lock.withExclusiveAccess {
-      try await exportUnlocked(range: range, mode: mode, metrics: metrics)
-    }
-  }
-
-  private func exportUnlocked(
-    range: WeekRange,
-    mode: ExportMode,
-    metrics: Set<ExportMetricCategory>
-  ) async throws -> ExportSummary {
-    let draft: ExportDraft
-    do {
-      draft = try await prepare(range: range, mode: mode, metrics: metrics)
-    } catch {
-      if shouldDeferPreparationFailure(error, mode: mode) {
+      let draft: ExportDraft
+      do {
+        draft = try await prepare(range: range, mode: mode, metrics: metrics)
+      } catch {
+        let isDeferred = mode == .shortcut && isHealthDatabaseInaccessible(error)
         try? recordPreparationFailure(
           range: range,
           mode: mode,
           metrics: metrics,
-          status: .queued,
           error: error,
-          errorMessage: Self.deferredHealthAccessMessage
+          isDeferred: isDeferred
         )
-        throw ExportCoordinatorError.exportDeferred
+        throw isDeferred ? ExportCoordinatorError.exportDeferred : error
       }
 
-      try? recordPreparationFailure(
-        range: range,
-        mode: mode,
-        metrics: metrics,
-        status: .failed,
-        error: error
-      )
-      throw error
+      return try await deliver(draft, as: newRecord(for: draft))
     }
-
-    return try await sendUnlocked(draft)
   }
 
   func incrementalRange(calendar: Calendar = .vitalsDefault) -> WeekRange? {
@@ -210,44 +123,20 @@ struct ExportCoordinator {
     return try await export(range: range, mode: .incremental, metrics: metrics)
   }
 
+  /// Retries a queued record in place, or sends a failed record again as a new history record.
   func retry(recordID: UUID) async throws -> ExportSummary {
     try await lock.withExclusiveAccess {
-      try await retryUnlocked(recordID: recordID)
-    }
-  }
+      let record = try loadRecord(id: recordID)
+      if record.status == .queued {
+        return try await completeQueuedRecord(record)
+      }
 
-  private func retryUnlocked(recordID: UUID) async throws -> ExportSummary {
-    let records = try historyStore.loadRecords()
-    guard let record = records.first(where: { $0.id == recordID }) else {
-      throw ExportCoordinatorError.recordNotFound
+      let draft = try await draft(for: record, mode: .retry)
+      var retryRecord = newRecord(for: draft)
+      retryRecord.attemptCount = 2
+      retryRecord.retrySourceID = record.id
+      return try await deliver(draft, as: retryRecord)
     }
-
-    if record.status == .queued {
-      return try await completeQueuedRecord(recordID: record.id)
-    }
-
-    if let payloadFileName = record.payloadFileName {
-      let configuration = try configurationStore.load()
-      let payload = try historyStore.loadPayload(named: payloadFileName)
-      let draft = ExportDraft(
-        range: record.range,
-        mode: .retry,
-        metrics: record.metrics,
-        destinationHost: configuration.endpoint.host,
-        endpointURLString: configuration.endpoint.importURL.absoluteString,
-        payload: payload,
-        counts: ExportCounts(payload: payload, range: record.range),
-        warnings: warnings(for: payload, selectedMetrics: Set(record.metrics))
-      )
-      return try await sendUnlocked(draft, retrySourceID: record.id)
-    }
-
-    let draft = try await prepare(
-      range: record.range,
-      mode: .retry,
-      metrics: Set(record.metrics)
-    )
-    return try await sendUnlocked(draft, retrySourceID: record.id)
   }
 
   func drainQueue() async {
@@ -258,17 +147,13 @@ struct ExportCoordinator {
 
       for record in records.reversed()
       where record.status == .queued && (record.nextRetryAt.map { $0 <= now() } ?? true) {
-        _ = try? await completeQueuedRecord(recordID: record.id)
+        _ = try? await completeQueuedRecord(record)
       }
     }
   }
 
-  func diagnostics(for recordID: UUID) throws -> ExportDiagnosticsBundle {
-    let records = try historyStore.loadRecords()
-    guard let record = records.first(where: { $0.id == recordID }) else {
-      throw ExportCoordinatorError.recordNotFound
-    }
-
+  func diagnostics(for recordID: UUID) throws -> String {
+    let record = try loadRecord(id: recordID)
     let lines = [
       "Hem Export Diagnostics",
       "Status: \(record.status.rawValue)",
@@ -289,159 +174,35 @@ struct ExportCoordinator {
       "Next Retry: \(record.nextRetryAt.map(String.init(describing:)) ?? "None")",
     ]
 
-    return ExportDiagnosticsBundle(text: lines.joined(separator: "\n"))
+    return lines.joined(separator: "\n")
   }
 
-  private func makeRecord(
-    from draft: ExportDraft,
-    configuration: HemWebConfiguration,
-    retrySourceID: UUID?
-  ) -> ExportRecord {
-    let date = now()
-    return ExportRecord(
-      id: uuid(),
-      range: draft.range,
-      mode: draft.mode,
-      metrics: draft.metrics,
-      status: .sending,
-      destinationHost: configuration.endpoint.host,
-      endpointURLString: configuration.endpoint.importURL.absoluteString,
-      requestedAt: date,
-      startedAt: date,
-      completedAt: nil,
-      attemptCount: retrySourceID == nil ? 1 : 2,
-      counts: draft.counts,
-      retrySourceID: retrySourceID,
-      payloadFileName: nil,
-      errorMessage: nil,
-      errorCode: nil,
-      httpStatus: nil,
-      serverResponseSummary: nil
-    )
-  }
-
-  private func recordPreparationFailure(
-    range: WeekRange,
-    mode: ExportMode,
-    metrics: Set<ExportMetricCategory>,
-    status: ExportStatus,
-    error: Error,
-    errorMessage: String? = nil
-  ) throws {
-    let requestedAt = now()
-    let destination = destinationSnapshot()
-    let record = ExportRecord(
-      id: uuid(),
-      range: range,
-      mode: mode,
-      metrics: ordered(metrics),
-      status: status,
-      destinationHost: destination.host,
-      endpointURLString: destination.endpointURLString,
-      requestedAt: requestedAt,
-      startedAt: requestedAt,
-      completedAt: status == .queued ? nil : requestedAt,
-      attemptCount: 1,
-      counts: .empty,
-      retrySourceID: nil,
-      payloadFileName: nil,
-      errorMessage: errorMessage ?? ExportErrorPresentation.message(for: error),
-      errorCode: errorCode(for: error),
-      httpStatus: nil,
-      serverResponseSummary: nil
-    )
-
-    var records = try historyStore.loadRecords()
-    records.insert(record, at: 0)
-    try historyStore.saveRecords(records)
-  }
-
-  private func completeQueuedRecord(recordID: UUID) async throws -> ExportSummary {
-    let draft: ExportDraft
-    do {
-      draft = try await draftForQueuedRecord(recordID: recordID)
-    } catch {
-      try? recordQueuedPreparationFailure(recordID: recordID, error: error)
-      if isHealthDatabaseInaccessible(error) {
-        throw ExportCoordinatorError.exportDeferred
-      }
-      throw error
-    }
-
-    return try await sendQueued(draft, recordID: recordID)
-  }
-
-  private func draftForQueuedRecord(recordID: UUID) async throws -> ExportDraft {
-    let records = try historyStore.loadRecords()
-    guard let record = records.first(where: { $0.id == recordID }) else {
-      throw ExportCoordinatorError.recordNotFound
-    }
-
-    if let payloadFileName = record.payloadFileName {
-      let configuration = try configurationStore.load()
-      let payload = try historyStore.loadPayload(named: payloadFileName)
-      return ExportDraft(
-        range: record.range,
-        mode: record.mode,
-        metrics: record.metrics,
-        destinationHost: configuration.endpoint.host,
-        endpointURLString: configuration.endpoint.importURL.absoluteString,
-        payload: payload,
-        counts: ExportCounts(payload: payload, range: record.range),
-        warnings: warnings(for: payload, selectedMetrics: Set(record.metrics))
-      )
-    }
-
-    return try await prepare(
-      range: record.range,
-      mode: record.mode,
-      metrics: Set(record.metrics)
-    )
-  }
-
-  private func sendQueued(_ draft: ExportDraft, recordID: UUID) async throws -> ExportSummary {
+  /// Sends the draft's payload and saves the outcome to `record`.
+  ///
+  /// Retryable failures keep the payload on disk and leave the record queued; a later success
+  /// removes any saved payload.
+  private func deliver(_ draft: ExportDraft, as record: ExportRecord) async throws
+    -> ExportSummary
+  {
     let configuration = try configurationStore.load()
-    var records = try historyStore.loadRecords()
-    guard var record = records.first(where: { $0.id == recordID }) else {
-      throw ExportCoordinatorError.recordNotFound
-    }
-
-    let queuedPayloadFileName = record.payloadFileName
-    record.startedAt = now()
-    record.completedAt = nil
-    record.attemptCount += 1
+    var record = record
     record.status = .sending
-    record.destinationHost = configuration.endpoint.host
-    record.endpointURLString = configuration.endpoint.importURL.absoluteString
-    record.counts = draft.counts
     record.errorMessage = nil
     record.errorCode = nil
     record.httpStatus = nil
-    record.serverResponseSummary = nil
     record.serverImportID = nil
     record.serverImportStatus = nil
     record.serverCounts = nil
     record.nextRetryAt = nil
-    try replace(record, in: &records)
-    try historyStore.saveRecords(records)
+    try save(record)
 
+    let response: HemWebResponseSummary
     do {
-      let responseSummary = try await client.post(
+      response = try await client.post(
         payload: draft.payload,
         endpoint: configuration.endpoint,
         bearerToken: configuration.bearerToken
       )
-      record.status = .succeeded
-      record.completedAt = now()
-      apply(responseSummary, to: &record)
-      record.errorMessage = nil
-      record.errorCode = nil
-      record.nextRetryAt = nil
-      record.payloadFileName = nil
-      checkpointStore.advanceLastSuccessEnd(to: min(draft.range.end, now()))
-      if let queuedPayloadFileName {
-        try? historyStore.deletePayload(named: queuedPayloadFileName)
-      }
     } catch {
       record.completedAt = now()
       record.errorMessage = ExportErrorPresentation.message(for: error)
@@ -460,46 +221,163 @@ struct ExportCoordinator {
         record.status = .failed
       }
 
-      var failedRecords = try historyStore.loadRecords()
-      try replace(record, in: &failedRecords)
-      try historyStore.saveRecords(failedRecords)
+      try save(record)
       throw error
     }
 
-    var completedRecords = try historyStore.loadRecords()
-    try replace(record, in: &completedRecords)
-    try historyStore.saveRecords(completedRecords)
+    record.status = .succeeded
+    record.completedAt = now()
+    record.httpStatus = response.statusCode
+    record.serverImportID = response.importResult?.importId
+    record.serverImportStatus = response.importResult?.status
+    record.serverCounts = response.importResult?.counts
+    if let payloadFileName = record.payloadFileName {
+      try? historyStore.deletePayload(named: payloadFileName)
+      record.payloadFileName = nil
+    }
+    checkpointStore.advanceLastSuccessEnd(to: min(draft.range.end, now()))
+    try save(record)
+
     return ExportSummary(
       range: draft.range,
       destinationHost: draft.destinationHost,
-      dailyMetricCount: draft.counts.dailyMetricCount,
-      sampleCount: draft.counts.sampleCount,
-      categorySampleCount: draft.counts.categorySampleCount,
-      workoutCount: draft.counts.workoutCount,
-      sleepSampleCount: draft.counts.sleepSampleCount,
-      serverImportStatus: record.serverImportStatus,
-      serverCounts: record.serverCounts
+      serverImportStatus: record.serverImportStatus
     )
   }
 
-  private func recordQueuedPreparationFailure(recordID: UUID, error: Error) throws {
-    var records = try historyStore.loadRecords()
-    guard var record = records.first(where: { $0.id == recordID }) else {
+  private func completeQueuedRecord(_ record: ExportRecord) async throws -> ExportSummary {
+    var record = record
+    let draft: ExportDraft
+    do {
+      draft = try await self.draft(for: record, mode: record.mode)
+    } catch {
+      let isDeferred = isHealthDatabaseInaccessible(error)
+      record.status = isDeferred ? .queued : .failed
+      record.completedAt = isDeferred ? nil : now()
+      record.errorMessage =
+        isDeferred ? Self.deferredHealthAccessMessage : ExportErrorPresentation.message(for: error)
+      record.errorCode = errorCode(for: error)
+      try? save(record)
+      throw isDeferred ? ExportCoordinatorError.exportDeferred : error
+    }
+
+    record.startedAt = now()
+    record.completedAt = nil
+    record.attemptCount += 1
+    record.destinationHost = draft.destinationHost
+    record.endpointURLString = draft.endpointURLString
+    record.counts = draft.counts
+    return try await deliver(draft, as: record)
+  }
+
+  /// Rebuilds a record's draft from its saved payload, or from HealthKit when none was saved.
+  private func draft(for record: ExportRecord, mode: ExportMode) async throws -> ExportDraft {
+    guard let payloadFileName = record.payloadFileName else {
+      return try await prepare(range: record.range, mode: mode, metrics: Set(record.metrics))
+    }
+
+    let configuration = try configurationStore.load()
+    return makeDraft(
+      range: record.range,
+      mode: mode,
+      metrics: Set(record.metrics),
+      payload: try historyStore.loadPayload(named: payloadFileName),
+      configuration: configuration
+    )
+  }
+
+  private func makeDraft(
+    range: WeekRange,
+    mode: ExportMode,
+    metrics: Set<ExportMetricCategory>,
+    payload: ExportPayload,
+    configuration: HemWebConfiguration
+  ) -> ExportDraft {
+    ExportDraft(
+      range: range,
+      mode: mode,
+      metrics: ordered(metrics),
+      destinationHost: configuration.endpoint.host,
+      endpointURLString: configuration.endpoint.importURL.absoluteString,
+      payload: payload,
+      counts: ExportCounts(payload: payload, range: range),
+      warnings: warnings(for: payload, selectedMetrics: metrics)
+    )
+  }
+
+  private func newRecord(for draft: ExportDraft) -> ExportRecord {
+    let date = now()
+    return ExportRecord(
+      id: uuid(),
+      range: draft.range,
+      mode: draft.mode,
+      metrics: draft.metrics,
+      status: .sending,
+      destinationHost: draft.destinationHost,
+      endpointURLString: draft.endpointURLString,
+      requestedAt: date,
+      startedAt: date,
+      completedAt: nil,
+      attemptCount: 1,
+      counts: draft.counts,
+      retrySourceID: nil,
+      payloadFileName: nil,
+      errorMessage: nil,
+      errorCode: nil,
+      httpStatus: nil,
+      serverResponseSummary: nil
+    )
+  }
+
+  private func recordPreparationFailure(
+    range: WeekRange,
+    mode: ExportMode,
+    metrics: Set<ExportMetricCategory>,
+    error: Error,
+    isDeferred: Bool
+  ) throws {
+    let requestedAt = now()
+    let destination = destinationSnapshot()
+    try save(
+      ExportRecord(
+        id: uuid(),
+        range: range,
+        mode: mode,
+        metrics: ordered(metrics),
+        status: isDeferred ? .queued : .failed,
+        destinationHost: destination.host,
+        endpointURLString: destination.endpointURLString,
+        requestedAt: requestedAt,
+        startedAt: requestedAt,
+        completedAt: isDeferred ? nil : requestedAt,
+        attemptCount: 1,
+        counts: .empty,
+        retrySourceID: nil,
+        payloadFileName: nil,
+        errorMessage: isDeferred
+          ? Self.deferredHealthAccessMessage : ExportErrorPresentation.message(for: error),
+        errorCode: errorCode(for: error),
+        httpStatus: nil,
+        serverResponseSummary: nil
+      )
+    )
+  }
+
+  private func loadRecord(id: UUID) throws -> ExportRecord {
+    guard let record = try historyStore.loadRecords().first(where: { $0.id == id }) else {
       throw ExportCoordinatorError.recordNotFound
     }
+    return record
+  }
 
-    record.errorCode = errorCode(for: error)
-    if isHealthDatabaseInaccessible(error) {
-      record.status = .queued
-      record.completedAt = nil
-      record.errorMessage = Self.deferredHealthAccessMessage
+  /// Replaces the stored record with the same ID, or inserts it as the newest record.
+  private func save(_ record: ExportRecord) throws {
+    var records = try historyStore.loadRecords()
+    if let index = records.firstIndex(where: { $0.id == record.id }) {
+      records[index] = record
     } else {
-      record.status = .failed
-      record.completedAt = now()
-      record.errorMessage = ExportErrorPresentation.message(for: error)
+      records.insert(record, at: 0)
     }
-
-    try replace(record, in: &records)
     try historyStore.saveRecords(records)
   }
 
@@ -510,14 +388,6 @@ struct ExportCoordinator {
     }
 
     return (endpoint.host, endpoint.importURL.absoluteString)
-  }
-
-  private func replace(_ record: ExportRecord, in records: inout [ExportRecord]) throws {
-    guard let index = records.firstIndex(where: { $0.id == record.id }) else {
-      throw ExportCoordinatorError.recordNotFound
-    }
-
-    records[index] = record
   }
 
   private func ordered(_ metrics: Set<ExportMetricCategory>) -> [ExportMetricCategory] {
@@ -551,21 +421,11 @@ struct ExportCoordinator {
       }
     }
 
-    if let clientError = error as? HemWebClientError,
-      let statusCode = clientError.statusCode
-    {
+    if let statusCode = (error as? HemWebClientError)?.statusCode {
       return statusCode == 429 || (500..<600).contains(statusCode)
     }
 
     return false
-  }
-
-  private func apply(_ response: HemWebResponseSummary, to record: inout ExportRecord) {
-    record.httpStatus = response.statusCode
-    record.serverResponseSummary = nil
-    record.serverImportID = response.importResult?.importId
-    record.serverImportStatus = response.importResult?.status
-    record.serverCounts = response.importResult?.counts
   }
 
   private func nextRetryDate(for error: Error) -> Date? {
@@ -583,24 +443,12 @@ struct ExportCoordinator {
       "daily facts \(counts.dailyMetrics), samples \(counts.samples), category samples \(counts.categorySamples), workouts \(counts.workouts), sleep \(counts.sleep)"
   }
 
-  private func shouldDeferPreparationFailure(_ error: Error, mode: ExportMode) -> Bool {
-    mode == .shortcut && isHealthDatabaseInaccessible(error)
-  }
-
   private func isHealthDatabaseInaccessible(_ error: Error) -> Bool {
-    guard let hkError = error as? HKError else {
-      return false
-    }
-
-    return hkError.code == .errorDatabaseInaccessible
+    (error as? HKError)?.code == .errorDatabaseInaccessible
   }
 
   private func errorCode(for error: Error) -> String {
-    if error is HKError {
-      return "HKError"
-    }
-
-    return String(describing: type(of: error))
+    error is HKError ? "HKError" : String(describing: type(of: error))
   }
 }
 
