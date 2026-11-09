@@ -528,6 +528,73 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     XCTAssertEqual(record.payloadFileName, "queued.json")
   }
 
+  func testBackfillExportDoesNotMoveCheckpointBackwards() async throws {
+    let now = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let (coordinator, checkpointStore) = try successfulCoordinator(now: now)
+    let recentRange = try WeekRange.custom(
+      from: VitalsTestFixture.date("2026-06-22T00:00:00+01:00"),
+      through: VitalsTestFixture.date("2026-06-23T00:00:00+01:00")
+    )
+    let olderRange = try WeekRange.custom(
+      from: VitalsTestFixture.date("2026-05-01T00:00:00+01:00"),
+      through: VitalsTestFixture.date("2026-05-07T00:00:00+01:00")
+    )
+
+    _ = try await coordinator.send(draft(range: recentRange))
+    _ = try await coordinator.send(draft(range: olderRange))
+
+    XCTAssertEqual(checkpointStore.loadLastSuccessEnd(), recentRange.end)
+  }
+
+  func testExportEndingInFutureClampsCheckpointToNow() async throws {
+    let now = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let (coordinator, checkpointStore) = try successfulCoordinator(now: now)
+    let rangeThroughToday = try WeekRange.custom(from: now, through: now)
+
+    _ = try await coordinator.send(draft(range: rangeThroughToday))
+
+    XCTAssertEqual(checkpointStore.loadLastSuccessEnd(), now)
+  }
+
+  private func successfulCoordinator(now: Date) throws -> (
+    ExportCoordinator, ExportCheckpointStore
+  ) {
+    let (configurationStore, endpoint) = try configuredStore()
+    let response = try XCTUnwrap(
+      HTTPURLResponse(
+        url: endpoint.importURL,
+        statusCode: 201,
+        httpVersion: nil,
+        headerFields: nil)
+    )
+    let checkpointStore = ExportCheckpointStore(
+      userDefaults: try XCTUnwrap(UserDefaults(suiteName: UUID().uuidString))
+    )
+    let coordinator = ExportCoordinator(
+      configurationStore: configurationStore,
+      client: HemWebClient(
+        session: MockHTTPSession(data: Self.createdResponse, response: response)),
+      historyStore: MockExportHistoryStore(records: []),
+      checkpointStore: checkpointStore,
+      now: { now }
+    )
+    return (coordinator, checkpointStore)
+  }
+
+  private func draft(range: WeekRange) throws -> ExportDraft {
+    let payload = try VitalsTestFixture.payload()
+    return ExportDraft(
+      range: range,
+      mode: .manual,
+      metrics: [.steps],
+      destinationHost: "hem-web.local",
+      endpointURLString: "https://hem-web.local/apple-health/import",
+      payload: payload,
+      counts: ExportCounts(payload: payload, range: range),
+      warnings: []
+    )
+  }
+
   private func record(
     requestedAt: Date,
     payloadFileName: String? = nil,
