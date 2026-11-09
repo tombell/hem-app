@@ -1,54 +1,48 @@
 import SwiftUI
 
 struct ExportPanel: View {
-  @Binding var startDate: Date
-  @Binding var throughDate: Date
-  @Binding var selectedMetrics: Set<ExportMetricCategory>
-  let rangeLabel: String
-  let isPreparing: Bool
-  let canExport: Bool
-  let canExportSinceLastSuccess: Bool
-  let previewAction: () async -> Void
-  let incrementalAction: () async -> Void
+  @Environment(AppModel.self) private var model
 
   var body: some View {
+    @Bindable var model = model
+
     DashboardPanel(title: "Export", systemImage: "calendar.badge.clock", tint: .teal) {
       DateRangePicker(
-        startDate: $startDate,
-        throughDate: $throughDate
+        startDate: $model.selectedStartDate,
+        throughDate: $model.selectedThroughDate
       )
 
       Divider()
 
       InfoRow(
         title: "Range",
-        value: rangeLabel,
+        value: model.selectedRange?.displayLabel ?? "—",
         systemImage: "calendar",
         tint: .teal
       )
 
-      MetricSelectionGrid(selectedMetrics: $selectedMetrics)
+      MetricSelectionGrid(selectedMetrics: $model.selectedMetrics)
 
       LoadingActionButton(
         title: "Preview Export",
         systemImage: "doc.text.magnifyingglass",
-        isLoading: isPreparing,
-        action: previewAction
+        isLoading: model.isExporting,
+        action: model.preparePreview
       )
       .buttonStyle(.borderedProminent)
       .controlSize(.regular)
-      .disabled(!canExport)
+      .disabled(!model.canExport)
       .accessibilityIdentifier("preview-export-button")
 
       LoadingActionButton(
         title: "Since Last Success",
         systemImage: "clock.badge.checkmark",
-        isLoading: isPreparing,
-        action: incrementalAction
+        isLoading: model.isExporting,
+        action: model.exportSinceLastSuccess
       )
       .buttonStyle(.bordered)
       .controlSize(.regular)
-      .disabled(!canExport || !canExportSinceLastSuccess)
+      .disabled(!model.canExport || !model.canExportSinceLastSuccess)
       .accessibilityIdentifier("export-since-last-success-button")
     }
   }

@@ -1,21 +1,16 @@
 import SwiftUI
 
 struct DestinationPanel: View {
-  @Binding var endpointText: String
-  @Binding var bearerToken: String
-  let destinationHost: String
-  let endpointState: ReadinessState
-  let settingsMessage: ExportDisplayResult?
-  let isTestingConnection: Bool
-  let saveAction: () -> Void
-  let testConnectionAction: () async -> Void
+  @Environment(AppModel.self) private var model
 
   var body: some View {
+    @Bindable var model = model
+
     DashboardPanel(title: "Hem Web", systemImage: "network", tint: .blue) {
       FieldRow(title: "Endpoint", systemImage: "link") {
         TextField(
           "Endpoint URL",
-          text: $endpointText,
+          text: $model.endpointText,
           prompt: Text("Endpoint URL").foregroundStyle(.tertiary)
         )
         .keyboardType(.URL)
@@ -30,7 +25,7 @@ struct DestinationPanel: View {
       FieldRow(title: "Bearer Token", systemImage: "key") {
         SecureField(
           "Bearer Token",
-          text: $bearerToken,
+          text: $model.bearerToken,
           prompt: Text("Required").foregroundStyle(.tertiary)
         )
         .textInputAutocapitalization(.never)
@@ -43,12 +38,12 @@ struct DestinationPanel: View {
 
       InfoRow(
         title: "Destination",
-        value: destinationHost,
-        systemImage: endpointState.systemImage,
-        tint: endpointState.tint
+        value: model.resolvedDestinationHost,
+        systemImage: model.endpointState.systemImage,
+        tint: model.endpointState.tint
       )
 
-      Button(action: saveAction) {
+      Button(action: model.saveSettings) {
         Label("Save Settings", systemImage: "checkmark.circle")
           .frame(maxWidth: .infinity)
       }
@@ -58,13 +53,13 @@ struct DestinationPanel: View {
       LoadingActionButton(
         title: "Test Connection",
         systemImage: "network",
-        isLoading: isTestingConnection,
-        action: testConnectionAction
+        isLoading: model.isTestingConnection,
+        action: model.testConnection
       )
       .buttonStyle(.bordered)
       .controlSize(.regular)
 
-      if let settingsMessage {
+      if let settingsMessage = model.settingsMessage {
         ResultBanner(result: settingsMessage)
       }
     }

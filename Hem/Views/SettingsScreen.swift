@@ -1,19 +1,7 @@
 import SwiftUI
 
 struct SettingsScreen: View {
-  @Binding var endpointText: String
-  @Binding var bearerToken: String
-  let destinationHost: String
-  let endpointState: ReadinessState
-  let healthStatus: HealthAuthorizationService.Status
-  let healthState: ReadinessState
-  let settingsMessage: ExportDisplayResult?
-  let isRequestingHealthAccess: Bool
-  let isTestingConnection: Bool
-  let result: ExportDisplayResult?
-  let saveAction: () -> Void
-  let testConnectionAction: () async -> Void
-  let requestHealthAccessAction: () async -> Void
+  @Environment(AppModel.self) private var model
 
   var body: some View {
     ScreenContainer {
@@ -23,23 +11,9 @@ struct SettingsScreen: View {
         systemImage: "gearshape.fill",
         tint: .blue
       )
-      DestinationPanel(
-        endpointText: $endpointText,
-        bearerToken: $bearerToken,
-        destinationHost: destinationHost,
-        endpointState: endpointState,
-        settingsMessage: settingsMessage,
-        isTestingConnection: isTestingConnection,
-        saveAction: saveAction,
-        testConnectionAction: testConnectionAction
-      )
-      HealthPanel(
-        healthStatus: healthStatus,
-        healthState: healthState,
-        isRequestingHealthAccess: isRequestingHealthAccess,
-        requestAction: requestHealthAccessAction
-      )
-      ResultPanel(result: result)
+      DestinationPanel()
+      HealthPanel()
+      ResultPanel(result: model.lastResult)
     }
   }
 }
