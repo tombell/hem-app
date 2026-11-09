@@ -93,9 +93,7 @@ struct ExportCounts: Codable, Equatable {
 }
 
 struct ExportDraft: Identifiable, Equatable {
-  var id: String {
-    "\(mode.rawValue)-\(range.start.timeIntervalSince1970)-\(range.end.timeIntervalSince1970)-\(metrics.map(\.rawValue).joined(separator: ","))"
-  }
+  let id = UUID()
 
   let range: WeekRange
   let mode: ExportMode
@@ -105,8 +103,4 @@ struct ExportDraft: Identifiable, Equatable {
   let payload: ExportPayload
   let counts: ExportCounts
   let warnings: [String]
-}
-
-struct ExportDiagnosticsBundle: Equatable {
-  let text: String
 }

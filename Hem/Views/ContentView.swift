@@ -316,7 +316,7 @@ struct ContentView: View {
   }
 
   private func diagnosticsText(recordID: UUID) -> String? {
-    try? exportCoordinator.diagnostics(for: recordID).text
+    try? exportCoordinator.diagnostics(for: recordID)
   }
 
   private func deleteRecord(recordID: UUID) async {

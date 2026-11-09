@@ -604,6 +604,43 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     XCTAssertEqual(checkpointStore.loadLastSuccessEnd(), now)
   }
 
+  func testRetryingFailedRecordAddsLinkedRecordAndKeepsOriginal() async throws {
+    let now = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    var failed = try record(requestedAt: now.addingTimeInterval(-60))
+    failed.status = .failed
+    let store = MockExportHistoryStore(records: [failed])
+    let (configurationStore, endpoint) = try configuredStore()
+    let response = try XCTUnwrap(
+      HTTPURLResponse(
+        url: endpoint.importURL,
+        statusCode: 201,
+        httpVersion: nil,
+        headerFields: nil)
+    )
+    let payload = try VitalsTestFixture.payload()
+    let coordinator = ExportCoordinator(
+      configurationStore: configurationStore,
+      exportService: MockHealthExportService { _, _ in payload },
+      client: HemWebClient(
+        session: MockHTTPSession(data: Self.createdResponse, response: response)),
+      historyStore: store,
+      checkpointStore: ExportCheckpointStore(
+        userDefaults: try XCTUnwrap(UserDefaults(suiteName: UUID().uuidString))
+      ),
+      now: { now }
+    )
+
+    _ = try await coordinator.retry(recordID: failed.id)
+
+    XCTAssertEqual(store.records.count, 2)
+    let retry = try XCTUnwrap(store.records.first)
+    XCTAssertEqual(retry.mode, .retry)
+    XCTAssertEqual(retry.status, .succeeded)
+    XCTAssertEqual(retry.retrySourceID, failed.id)
+    XCTAssertEqual(retry.attemptCount, 2)
+    XCTAssertEqual(store.records.last, failed)
+  }
+
   func testPrepareWarnsAboutEachSelectedCategoryWithoutData() async throws {
     let (configurationStore, _) = try configuredStore()
     let basePayload = try VitalsTestFixture.payload()

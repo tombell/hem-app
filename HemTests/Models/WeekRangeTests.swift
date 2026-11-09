@@ -117,10 +117,7 @@ final class WeekRangeTests: XCTestCase {
     let summary = ExportSummary(
       range: range,
       destinationHost: "hem-web.local",
-      dailyMetricCount: 0,
-      sampleCount: 0,
-      workoutCount: 0,
-      sleepSampleCount: 0
+      serverImportStatus: .created
     )
 
     XCTAssertEqual(summary.intentDialog, "Exported Health data for 10 Jun-12 Jun.")
