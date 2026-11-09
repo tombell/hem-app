@@ -33,6 +33,29 @@ enum HealthMetricDefinitions {
         .exercise
       }
     }
+
+    var value: KeyPath<ExportPayload.DailyMetric, ExportPayload.QuantityValue?> {
+      switch kind {
+      case .steps:
+        \.steps
+      case .activeEnergy:
+        \.activeEnergy
+      case .basalEnergy:
+        \.basalEnergy
+      case .exerciseTime:
+        \.exerciseTime
+      case .walkingRunningDistance:
+        \.walkingRunningDistance
+      case .cyclingDistance:
+        \.cyclingDistance
+      case .swimmingDistance:
+        \.swimmingDistance
+      case .swimmingStrokeCount:
+        \.swimmingStrokeCount
+      case .flightsClimbed:
+        \.flightsClimbed
+      }
+    }
   }
 
   struct SampleQuantityMetric {
@@ -1275,6 +1298,35 @@ enum HealthMetricDefinitions {
 
     types.insert(HKObjectType.workoutType())
     return types
+  }
+
+  /// Returns the export categories that have at least one record in the payload.
+  static func categoriesWithData(in payload: ExportPayload) -> Set<ExportMetricCategory> {
+    var categories = Set<ExportMetricCategory>()
+
+    for metric in dailyQuantityMetrics
+    where payload.dailyMetrics.contains(where: { $0[keyPath: metric.value] != nil }) {
+      categories.insert(metric.exportCategory)
+    }
+
+    let sampleTypes = Set(payload.samples.map(\.type))
+    for metric in sampleQuantityMetrics where sampleTypes.contains(metric.type) {
+      categories.insert(metric.exportCategory)
+    }
+
+    let categorySampleTypes = Set(payload.categorySamples.map(\.type))
+    for metric in categoryMetrics where categorySampleTypes.contains(metric.type) {
+      categories.insert(metric.exportCategory)
+    }
+
+    if !payload.sleep.isEmpty {
+      categories.insert(.sleep)
+    }
+    if !payload.workouts.isEmpty {
+      categories.insert(.workouts)
+    }
+
+    return categories
   }
 
   static func quantityType(for identifier: HKQuantityTypeIdentifier) throws -> HKQuantityType {

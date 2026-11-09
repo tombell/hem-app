@@ -528,33 +528,16 @@ struct ExportCoordinator {
     for payload: ExportPayload,
     selectedMetrics: Set<ExportMetricCategory>
   ) -> [String] {
-    var warnings: [String] = []
-    if selectedMetrics.contains(.sleep), payload.sleep.isEmpty {
-      warnings.append(
-        "No sleep records found; data may be missing or permission may not be granted.")
+    let categoriesWithData = HealthMetricDefinitions.categoriesWithData(in: payload)
+    let emptyCategories = ordered(selectedMetrics.subtracting(categoriesWithData))
+    guard !emptyCategories.isEmpty else {
+      return []
     }
-    if selectedMetrics.contains(.workouts), payload.workouts.isEmpty {
-      warnings.append("No workouts found; data may be missing or permission may not be granted.")
-    }
-    if selectedMetrics.contains(.heart),
-      !payload.samples.contains(where: { $0.type != "bodyMass" })
-    {
-      warnings.append(
-        "No heart samples found; data may be missing or permission may not be granted.")
-    }
-    if selectedMetrics.contains(.bodyMass),
-      !payload.samples.contains(where: { $0.type == "bodyMass" })
-    {
-      warnings.append(
-        "No body mass samples found; data may be missing or permission may not be granted.")
-    }
-    if selectedMetrics.contains(where: { [.steps, .energy, .exercise, .distance].contains($0) }),
-      payload.dailyMetrics.isEmpty
-    {
-      warnings.append(
-        "No daily metrics found; data may be missing or permission may not be granted.")
-    }
-    return warnings
+
+    let titles = emptyCategories.map(\.title).joined(separator: ", ")
+    return [
+      "No data found for \(titles). Data may be missing or Health access may not be granted."
+    ]
   }
 
   private func shouldQueue(_ error: Error) -> Bool {

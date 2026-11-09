@@ -181,6 +181,8 @@ private struct ExportHistoryRow: View {
   let record: ExportRecord
   let retryAction: (UUID) async -> Void
 
+  @State private var isRetrying = false
+
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       HStack(alignment: .firstTextBaseline) {
@@ -242,9 +244,11 @@ private struct ExportHistoryRow: View {
         LoadingActionButton(
           title: "Retry",
           systemImage: "arrow.clockwise",
-          isLoading: false
+          isLoading: isRetrying
         ) {
+          isRetrying = true
           await retryAction(record.id)
+          isRetrying = false
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
