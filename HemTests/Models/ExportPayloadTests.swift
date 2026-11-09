@@ -6,12 +6,12 @@ import XCTest
 final class ExportPayloadTests: XCTestCase {
   func testPayloadEncodingUsesSchemaAndOmitsNilMetricFields() throws {
     let range = WeekRange.previousFullWeek(
-      now: try VitalsTestFixture.date("2026-06-24T12:00:00+01:00"),
-      calendar: .vitalsDefault
+      now: try HemTestFixture.date("2026-06-24T12:00:00+01:00"),
+      calendar: .exportDefault
     )
     let payload = ExportPayload(
-      source: VitalsTestFixture.source,
-      generatedAt: try VitalsTestFixture.date("2026-06-24T12:15:00+01:00"),
+      source: HemTestFixture.source,
+      generatedAt: try HemTestFixture.date("2026-06-24T12:15:00+01:00"),
       range: ExportPayload.RangeMetadata(weekRange: range),
       dailyMetrics: [
         ExportPayload.DailyMetric(
@@ -45,10 +45,10 @@ final class ExportPayloadTests: XCTestCase {
   }
 
   func testPayloadEncodingIncludesStableRecordAndDeviceIdentifiers() throws {
-    let range = try VitalsTestFixture.previousFullWeek()
-    let date = try VitalsTestFixture.date("2026-06-15T08:30:00+01:00")
+    let range = try HemTestFixture.previousFullWeek()
+    let date = try HemTestFixture.date("2026-06-15T08:30:00+01:00")
     let payload = ExportPayload(
-      source: VitalsTestFixture.source,
+      source: HemTestFixture.source,
       generatedAt: date,
       range: ExportPayload.RangeMetadata(weekRange: range),
       dailyMetrics: [],
@@ -149,7 +149,7 @@ final class ExportPayloadTests: XCTestCase {
 
   func testHealthKitUUIDRemainsStableAcrossOverlappingExports() throws {
     let type = try XCTUnwrap(HKQuantityType.quantityType(forIdentifier: .bodyMass))
-    let start = try VitalsTestFixture.date("2026-06-15T08:00:00+01:00")
+    let start = try HemTestFixture.date("2026-06-15T08:00:00+01:00")
     let sample = HKQuantitySample(
       type: type,
       quantity: HKQuantity(unit: .gramUnit(with: .kilo), doubleValue: 75),
@@ -166,14 +166,14 @@ final class ExportPayloadTests: XCTestCase {
 
   func testPayloadEncodingUsesStrictRFC3339OffsetsAndCalendarDates() throws {
     let range = WeekRange(
-      start: try VitalsTestFixture.date("2026-03-29T00:00:00+00:00"),
-      end: try VitalsTestFixture.date("2026-03-30T00:00:00+01:00"),
-      calendar: .vitalsDefault,
+      start: try HemTestFixture.date("2026-03-29T00:00:00+00:00"),
+      end: try HemTestFixture.date("2026-03-30T00:00:00+01:00"),
+      calendar: .exportDefault,
       kind: "custom"
     )
     let payload = ExportPayload(
-      source: VitalsTestFixture.source,
-      generatedAt: try VitalsTestFixture.date("2026-03-29T12:00:00+01:00"),
+      source: HemTestFixture.source,
+      generatedAt: try HemTestFixture.date("2026-03-29T12:00:00+01:00"),
       range: ExportPayload.RangeMetadata(weekRange: range),
       dailyMetrics: [
         .init(
@@ -218,9 +218,9 @@ final class ExportPayloadTests: XCTestCase {
 
   func testSampleContainmentUsesInclusiveRangeBoundaries() throws {
     let range = WeekRange(
-      start: try VitalsTestFixture.date("2026-06-15T00:00:00+01:00"),
-      end: try VitalsTestFixture.date("2026-06-16T00:00:00+01:00"),
-      calendar: .vitalsDefault,
+      start: try HemTestFixture.date("2026-06-15T00:00:00+01:00"),
+      end: try HemTestFixture.date("2026-06-16T00:00:00+01:00"),
+      calendar: .exportDefault,
       kind: "custom"
     )
 

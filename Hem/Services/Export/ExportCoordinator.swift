@@ -101,7 +101,7 @@ struct ExportCoordinator {
     }
   }
 
-  func incrementalRange(calendar: Calendar = .vitalsDefault) -> WeekRange? {
+  func incrementalRange(calendar: Calendar = .exportDefault) -> WeekRange? {
     guard let lastSuccessEnd = checkpointStore.loadLastSuccessEnd() else {
       return nil
     }

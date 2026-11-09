@@ -1,6 +1,6 @@
 import AppIntents
 
-struct VitalsShortcuts: AppShortcutsProvider {
+struct HemShortcuts: AppShortcutsProvider {
   static var shortcutTileColor: ShortcutTileColor = .red
 
   static var appShortcuts: [AppShortcut] {

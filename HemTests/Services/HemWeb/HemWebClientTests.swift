@@ -53,7 +53,7 @@ final class HemWebClientTests: XCTestCase {
     let client = HemWebClient(session: session)
 
     let summary = try await client.post(
-      payload: VitalsTestFixture.payload(),
+      payload: HemTestFixture.payload(),
       endpoint: endpoint,
       bearerToken: "secret-token"
     )
@@ -89,7 +89,7 @@ final class HemWebClientTests: XCTestCase {
       )
 
       let summary = try await HemWebClient(session: session).post(
-        payload: VitalsTestFixture.payload(),
+        payload: HemTestFixture.payload(),
         endpoint: endpoint,
         bearerToken: "token"
       )
@@ -114,7 +114,7 @@ final class HemWebClientTests: XCTestCase {
       )
 
       let summary = try await HemWebClient(session: session).post(
-        payload: VitalsTestFixture.payload(),
+        payload: HemTestFixture.payload(),
         endpoint: endpoint,
         bearerToken: "token"
       )
@@ -130,7 +130,7 @@ final class HemWebClientTests: XCTestCase {
 
     await assertThrowsErrorAsync(
       try await HemWebClient(session: session).post(
-        payload: VitalsTestFixture.payload(),
+        payload: HemTestFixture.payload(),
         endpoint: endpoint,
         bearerToken: "token"
       )
@@ -189,7 +189,7 @@ final class HemWebClientTests: XCTestCase {
 
       await assertThrowsErrorAsync(
         try await HemWebClient(session: session).post(
-          payload: VitalsTestFixture.payload(),
+          payload: HemTestFixture.payload(),
           endpoint: endpoint,
           bearerToken: "token"
         )
@@ -217,7 +217,7 @@ final class HemWebClientTests: XCTestCase {
 
     await assertThrowsErrorAsync(
       try await HemWebClient(session: session).post(
-        payload: VitalsTestFixture.payload(),
+        payload: HemTestFixture.payload(),
         endpoint: endpoint,
         bearerToken: "token"
       )
@@ -243,7 +243,7 @@ final class HemWebClientTests: XCTestCase {
 
     await assertThrowsErrorAsync(
       try await HemWebClient(session: session).post(
-        payload: VitalsTestFixture.payload(),
+        payload: HemTestFixture.payload(),
         endpoint: endpoint,
         bearerToken: "secret-token"
       )

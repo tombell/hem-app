@@ -22,8 +22,8 @@ final class ExportHistoryStoreTests: XCTestCase {
 
   func testRecordsRoundTripNewestFirst() throws {
     let store = ExportHistoryStore(baseURL: temporaryDirectory)
-    let older = try record(requestedAt: VitalsTestFixture.date("2026-06-24T12:00:00+01:00"))
-    let newer = try record(requestedAt: VitalsTestFixture.date("2026-06-25T12:00:00+01:00"))
+    let older = try record(requestedAt: HemTestFixture.date("2026-06-24T12:00:00+01:00"))
+    let newer = try record(requestedAt: HemTestFixture.date("2026-06-25T12:00:00+01:00"))
 
     try store.saveRecords([older, newer])
 
@@ -31,7 +31,7 @@ final class ExportHistoryStoreTests: XCTestCase {
   }
 
   func testLegacyRecordWithoutCategoryOrServerFieldsStillDecodes() throws {
-    let record = try record(requestedAt: VitalsTestFixture.date("2026-06-24T12:00:00+01:00"))
+    let record = try record(requestedAt: HemTestFixture.date("2026-06-24T12:00:00+01:00"))
     let encoded = try JSONEncoder.exportStore.encode([record])
     var records = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [[String: Any]])
     var counts = try XCTUnwrap(records[0]["counts"] as? [String: Any])
@@ -54,7 +54,7 @@ final class ExportHistoryStoreTests: XCTestCase {
 
   func testQueuedPayloadRoundTripAndDelete() throws {
     let store = ExportHistoryStore(baseURL: temporaryDirectory)
-    let payload = try VitalsTestFixture.payload()
+    let payload = try HemTestFixture.payload()
 
     try store.savePayload(payload, named: "payload.json")
     XCTAssertEqual(try store.loadPayload(named: "payload.json"), payload)
@@ -66,7 +66,7 @@ final class ExportHistoryStoreTests: XCTestCase {
   private func record(requestedAt: Date) throws -> ExportRecord {
     ExportRecord(
       id: UUID(),
-      range: try VitalsTestFixture.previousFullWeek(),
+      range: try HemTestFixture.previousFullWeek(),
       mode: .manual,
       metrics: ExportMetricCategory.allCases,
       status: .succeeded,
@@ -113,7 +113,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
         headerFields: nil)
     )
     let store = MockExportHistoryStore(records: [])
-    let requestedAt = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let requestedAt = try HemTestFixture.date("2026-06-25T12:00:00+01:00")
     let recordID = UUID()
     let coordinator = ExportCoordinator(
       configurationStore: configurationStore,
@@ -123,8 +123,8 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
       uuid: { recordID },
       now: { requestedAt }
     )
-    let range = try VitalsTestFixture.previousFullWeek()
-    let payload = try VitalsTestFixture.payload()
+    let range = try HemTestFixture.previousFullWeek()
+    let payload = try HemTestFixture.payload()
     let draft = ExportDraft(
       range: range,
       mode: .shortcut,
@@ -167,7 +167,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     )
 
     let store = MockExportHistoryStore(records: [])
-    let requestedAt = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let requestedAt = try HemTestFixture.date("2026-06-25T12:00:00+01:00")
     let recordID = UUID()
     let coordinator = ExportCoordinator(
       configurationStore: configurationStore,
@@ -175,7 +175,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
       uuid: { recordID },
       now: { requestedAt }
     )
-    let range = try VitalsTestFixture.previousFullWeek()
+    let range = try HemTestFixture.previousFullWeek()
 
     do {
       _ = try await coordinator.export(range: range, mode: .shortcut, metrics: [.steps])
@@ -221,7 +221,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     )
 
     let store = MockExportHistoryStore(records: [])
-    let requestedAt = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let requestedAt = try HemTestFixture.date("2026-06-25T12:00:00+01:00")
     let recordID = UUID()
     let coordinator = ExportCoordinator(
       configurationStore: configurationStore,
@@ -232,7 +232,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
       uuid: { recordID },
       now: { requestedAt }
     )
-    let range = try VitalsTestFixture.previousFullWeek()
+    let range = try HemTestFixture.previousFullWeek()
 
     do {
       _ = try await coordinator.export(range: range, mode: .shortcut, metrics: [.steps])
@@ -278,9 +278,9 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
       bearerToken: "token"
     )
 
-    let range = try VitalsTestFixture.previousFullWeek()
-    let requestedAt = try VitalsTestFixture.date("2026-06-25T08:00:00+01:00")
-    let completedAt = try VitalsTestFixture.date("2026-06-25T09:00:00+01:00")
+    let range = try HemTestFixture.previousFullWeek()
+    let requestedAt = try HemTestFixture.date("2026-06-25T08:00:00+01:00")
+    let completedAt = try HemTestFixture.date("2026-06-25T09:00:00+01:00")
     let recordID = UUID()
     let queued = ExportRecord(
       id: recordID,
@@ -301,7 +301,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
       errorCode: "HKError",
       httpStatus: nil
     )
-    let payload = try VitalsTestFixture.payload()
+    let payload = try HemTestFixture.payload()
     let response = try XCTUnwrap(
       HTTPURLResponse(
         url: endpoint.importURL,
@@ -342,10 +342,10 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
 
   func testDeleteRecordRemovesRecordAndQueuedPayload() async throws {
     let queued = try record(
-      requestedAt: VitalsTestFixture.date("2026-06-25T12:00:00+01:00"),
+      requestedAt: HemTestFixture.date("2026-06-25T12:00:00+01:00"),
       payloadFileName: "queued.json"
     )
-    let succeeded = try record(requestedAt: VitalsTestFixture.date("2026-06-24T12:00:00+01:00"))
+    let succeeded = try record(requestedAt: HemTestFixture.date("2026-06-24T12:00:00+01:00"))
     let store = MockExportHistoryStore(records: [queued, succeeded])
     let coordinator = ExportCoordinator(historyStore: store)
 
@@ -369,7 +369,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
 
   func testConcurrentDrainsSendQueuedRecordOnce() async throws {
     let (configurationStore, endpoint) = try configuredStore()
-    let now = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let now = try HemTestFixture.date("2026-06-25T12:00:00+01:00")
     let queued = try record(requestedAt: now, payloadFileName: "queued.json")
     let response = try XCTUnwrap(
       HTTPURLResponse(
@@ -385,7 +385,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     )
     let store = MockExportHistoryStore(
       records: [queued],
-      payloads: ["queued.json": try VitalsTestFixture.payload()]
+      payloads: ["queued.json": try HemTestFixture.payload()]
     )
     let lock = ExportLock()
     let first = ExportCoordinator(
@@ -421,7 +421,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
         httpVersion: nil,
         headerFields: ["Retry-After": "120"])
     )
-    let now = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let now = try HemTestFixture.date("2026-06-25T12:00:00+01:00")
     let store = MockExportHistoryStore(records: [])
     let coordinator = ExportCoordinator(
       configurationStore: configurationStore,
@@ -435,8 +435,8 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
       historyStore: store,
       now: { now }
     )
-    let range = try VitalsTestFixture.previousFullWeek()
-    let payload = try VitalsTestFixture.payload()
+    let range = try HemTestFixture.previousFullWeek()
+    let payload = try HemTestFixture.payload()
     let draft = ExportDraft(
       range: range,
       mode: .manual,
@@ -483,8 +483,8 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
       ),
       historyStore: store
     )
-    let range = try VitalsTestFixture.previousFullWeek()
-    let payload = try VitalsTestFixture.payload()
+    let range = try HemTestFixture.previousFullWeek()
+    let payload = try HemTestFixture.payload()
     let draft = ExportDraft(
       range: range,
       mode: .manual,
@@ -511,7 +511,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
   }
 
   func testDrainSkipsRateLimitedRecordBeforeRetryDate() async throws {
-    let now = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let now = try HemTestFixture.date("2026-06-25T12:00:00+01:00")
     let queued = try record(
       requestedAt: now,
       payloadFileName: "queued.json",
@@ -519,7 +519,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     )
     let store = MockExportHistoryStore(
       records: [queued],
-      payloads: ["queued.json": try VitalsTestFixture.payload()]
+      payloads: ["queued.json": try HemTestFixture.payload()]
     )
     let coordinator = ExportCoordinator(historyStore: store, now: { now })
 
@@ -532,7 +532,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
 
   func testQueuedServerFailureRemainsQueuedForRetry() async throws {
     let (configurationStore, endpoint) = try configuredStore()
-    let now = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let now = try HemTestFixture.date("2026-06-25T12:00:00+01:00")
     let queued = try record(
       requestedAt: now,
       payloadFileName: "queued.json"
@@ -546,7 +546,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     )
     let store = MockExportHistoryStore(
       records: [queued],
-      payloads: ["queued.json": try VitalsTestFixture.payload()]
+      payloads: ["queued.json": try HemTestFixture.payload()]
     )
     let coordinator = ExportCoordinator(
       configurationStore: configurationStore,
@@ -575,15 +575,15 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
   }
 
   func testBackfillExportDoesNotMoveCheckpointBackwards() async throws {
-    let now = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let now = try HemTestFixture.date("2026-06-25T12:00:00+01:00")
     let (coordinator, checkpointStore) = try successfulCoordinator(now: now)
     let recentRange = try WeekRange.custom(
-      from: VitalsTestFixture.date("2026-06-22T00:00:00+01:00"),
-      through: VitalsTestFixture.date("2026-06-23T00:00:00+01:00")
+      from: HemTestFixture.date("2026-06-22T00:00:00+01:00"),
+      through: HemTestFixture.date("2026-06-23T00:00:00+01:00")
     )
     let olderRange = try WeekRange.custom(
-      from: VitalsTestFixture.date("2026-05-01T00:00:00+01:00"),
-      through: VitalsTestFixture.date("2026-05-07T00:00:00+01:00")
+      from: HemTestFixture.date("2026-05-01T00:00:00+01:00"),
+      through: HemTestFixture.date("2026-05-07T00:00:00+01:00")
     )
 
     _ = try await coordinator.send(draft(range: recentRange))
@@ -593,7 +593,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
   }
 
   func testExportEndingInFutureClampsCheckpointToNow() async throws {
-    let now = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let now = try HemTestFixture.date("2026-06-25T12:00:00+01:00")
     let (coordinator, checkpointStore) = try successfulCoordinator(now: now)
     let rangeThroughToday = try WeekRange.custom(from: now, through: now)
 
@@ -603,7 +603,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
   }
 
   func testRetryingFailedRecordAddsLinkedRecordAndKeepsOriginal() async throws {
-    let now = try VitalsTestFixture.date("2026-06-25T12:00:00+01:00")
+    let now = try HemTestFixture.date("2026-06-25T12:00:00+01:00")
     var failed = try record(requestedAt: now.addingTimeInterval(-60))
     failed.status = .failed
     let store = MockExportHistoryStore(records: [failed])
@@ -615,7 +615,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
         httpVersion: nil,
         headerFields: nil)
     )
-    let payload = try VitalsTestFixture.payload()
+    let payload = try HemTestFixture.payload()
     let coordinator = ExportCoordinator(
       configurationStore: configurationStore,
       exportService: MockHealthExportService { _, _ in payload },
@@ -641,7 +641,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
 
   func testPrepareWarnsAboutEachSelectedCategoryWithoutData() async throws {
     let (configurationStore, _) = try configuredStore()
-    let basePayload = try VitalsTestFixture.payload()
+    let basePayload = try HemTestFixture.payload()
     let respiratoryRate = ExportPayload.HealthSample(
       type: "respiratoryRate",
       start: basePayload.range.start,
@@ -665,7 +665,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
     )
 
     let draft = try await coordinator.prepare(
-      range: try VitalsTestFixture.previousFullWeek(),
+      range: try HemTestFixture.previousFullWeek(),
       metrics: [.sleep, .heart, .vitals]
     )
 
@@ -703,7 +703,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
   }
 
   private func draft(range: WeekRange) throws -> ExportDraft {
-    let payload = try VitalsTestFixture.payload()
+    let payload = try HemTestFixture.payload()
     return ExportDraft(
       range: range,
       mode: .manual,
@@ -723,7 +723,7 @@ final class ExportCoordinatorHistoryTests: XCTestCase {
   ) throws -> ExportRecord {
     ExportRecord(
       id: UUID(),
-      range: try VitalsTestFixture.previousFullWeek(),
+      range: try HemTestFixture.previousFullWeek(),
       mode: .manual,
       metrics: ExportMetricCategory.allCases,
       status: payloadFileName == nil ? .succeeded : .queued,
@@ -812,14 +812,14 @@ final class ExportDateRangeStoreTests: XCTestCase {
     let defaults = UserDefaults(suiteName: suiteName)!
     defer { defaults.removePersistentDomain(forName: suiteName) }
     let store = ExportDateRangeStore(userDefaults: defaults)
-    let range = try VitalsTestFixture.previousFullWeek()
+    let range = try HemTestFixture.previousFullWeek()
 
     let dates = store.load(defaultRange: range)
 
     XCTAssertEqual(dates.startDate, range.start)
     XCTAssertEqual(
       dates.throughDate,
-      Calendar.vitalsDefault.date(byAdding: .day, value: -1, to: range.end)
+      Calendar.exportDefault.date(byAdding: .day, value: -1, to: range.end)
     )
   }
 
@@ -828,9 +828,9 @@ final class ExportDateRangeStoreTests: XCTestCase {
     let defaults = UserDefaults(suiteName: suiteName)!
     defer { defaults.removePersistentDomain(forName: suiteName) }
     let store = ExportDateRangeStore(userDefaults: defaults)
-    let range = try VitalsTestFixture.previousFullWeek()
-    let startDate = try VitalsTestFixture.date("2026-06-10T09:00:00+01:00")
-    let throughDate = try VitalsTestFixture.date("2026-06-12T09:00:00+01:00")
+    let range = try HemTestFixture.previousFullWeek()
+    let startDate = try HemTestFixture.date("2026-06-10T09:00:00+01:00")
+    let throughDate = try HemTestFixture.date("2026-06-12T09:00:00+01:00")
 
     store.save(startDate: startDate, throughDate: throughDate)
 
@@ -844,9 +844,9 @@ final class ExportDateRangeStoreTests: XCTestCase {
     let defaults = UserDefaults(suiteName: suiteName)!
     defer { defaults.removePersistentDomain(forName: suiteName) }
     let store = ExportDateRangeStore(userDefaults: defaults)
-    let range = try VitalsTestFixture.previousFullWeek()
-    let startDate = try VitalsTestFixture.date("2026-06-12T09:00:00+01:00")
-    let throughDate = try VitalsTestFixture.date("2026-06-10T09:00:00+01:00")
+    let range = try HemTestFixture.previousFullWeek()
+    let startDate = try HemTestFixture.date("2026-06-12T09:00:00+01:00")
+    let throughDate = try HemTestFixture.date("2026-06-10T09:00:00+01:00")
 
     store.save(startDate: startDate, throughDate: throughDate)
 
@@ -854,7 +854,7 @@ final class ExportDateRangeStoreTests: XCTestCase {
     XCTAssertEqual(dates.startDate, range.start)
     XCTAssertEqual(
       dates.throughDate,
-      Calendar.vitalsDefault.date(byAdding: .day, value: -1, to: range.end)
+      Calendar.exportDefault.date(byAdding: .day, value: -1, to: range.end)
     )
   }
 }

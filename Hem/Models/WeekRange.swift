@@ -1,7 +1,7 @@
 import Foundation
 
 struct WeekRange: Codable, Equatable, Sendable {
-  static func previousDay(now: Date = Date(), calendar: Calendar = .vitalsDefault) -> WeekRange {
+  static func previousDay(now: Date = Date(), calendar: Calendar = .exportDefault) -> WeekRange {
     let currentDayStart = calendar.startOfDay(for: now)
     let previousDayStart =
       calendar.date(byAdding: .day, value: -1, to: currentDayStart) ?? currentDayStart
@@ -10,7 +10,7 @@ struct WeekRange: Codable, Equatable, Sendable {
       start: previousDayStart, end: currentDayStart, calendar: calendar, kind: "previousDay")
   }
 
-  static func previousFullWeek(now: Date = Date(), calendar: Calendar = .vitalsDefault) -> WeekRange
+  static func previousFullWeek(now: Date = Date(), calendar: Calendar = .exportDefault) -> WeekRange
   {
     var calendar = calendar
     calendar.firstWeekday = 2
@@ -28,7 +28,7 @@ struct WeekRange: Codable, Equatable, Sendable {
   }
 
   static func custom(
-    from startDate: Date, through throughDate: Date, calendar: Calendar = .vitalsDefault
+    from startDate: Date, through throughDate: Date, calendar: Calendar = .exportDefault
   ) throws -> WeekRange {
     let start = calendar.startOfDay(for: startDate)
     let through = calendar.startOfDay(for: throughDate)
@@ -96,7 +96,7 @@ enum WeekRangeError: LocalizedError, Equatable {
 }
 
 extension Calendar {
-  static var vitalsDefault: Calendar {
+  static var exportDefault: Calendar {
     var calendar = Calendar(identifier: .gregorian)
     calendar.locale = Locale(identifier: "en_GB")
     calendar.timeZone = TimeZone(identifier: "Europe/London") ?? .current
